@@ -39,6 +39,7 @@ export function TimerPanel({ durationData, onDurationChange }) {
         bgClass="bg-amber-100"
         borderClass="border-amber-500"
         pulseClass="timer-active-orange"
+        buttonBorderClass="border-2 border-amber-900"
         data={durationData.offTask}
         onDataChange={handleOffTaskChange}
       />

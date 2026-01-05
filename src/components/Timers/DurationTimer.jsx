@@ -1,7 +1,7 @@
 import { useTimer } from '../../hooks/useTimer';
 import { formatDuration, formatTotalDuration } from '../../hooks/useTimestamp';
 
-export function DurationTimer({ name, colorClass, bgClass, borderClass, pulseClass, data, onDataChange }) {
+export function DurationTimer({ name, colorClass, bgClass, borderClass, pulseClass, buttonBorderClass = '', data, onDataChange }) {
   const { isRunning, currentTime, totalAccumulated, instances, toggle } = useTimer(data);
 
   const handleToggle = () => {
@@ -33,7 +33,7 @@ export function DurationTimer({ name, colorClass, bgClass, borderClass, pulseCla
           className={`w-full py-2.5 px-4 rounded-lg font-semibold text-white text-sm transition-all active:scale-95 ${
             isRunning
               ? 'bg-gray-600 hover:bg-gray-700'
-              : `${colorClass.replace('text-', 'bg-')} hover:opacity-90`
+              : `${colorClass.replace('text-', 'bg-')} hover:opacity-90 ${buttonBorderClass}`
           }`}
         >
           {isRunning ? 'STOP' : 'START'}
