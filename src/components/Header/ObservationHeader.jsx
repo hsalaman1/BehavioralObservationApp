@@ -24,7 +24,7 @@ export function ObservationHeader({ header, isObserving, onHeaderChange, onStart
       <div className="max-w-4xl mx-auto px-4 py-3">
         {/* Top Row: Title and Start/End */}
         <div className="flex justify-between items-center mb-3">
-          <h1 className="text-xl font-bold text-blue-800">ESI Observation</h1>
+          <h1 className="text-xl font-bold text-gray-800">Classroom Behavioral Observation</h1>
           <div className="flex items-center gap-2">
             {isObserving && (
               <span className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
@@ -37,14 +37,14 @@ export function ObservationHeader({ header, isObserving, onHeaderChange, onStart
                 onClick={handleStartObservation}
                 className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
               >
-                ▶ Start Observation
+                Start Observation
               </button>
             ) : !header.endTime ? (
               <button
                 onClick={handleEndObservation}
                 className="bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
               >
-                ■ End Observation
+                End Observation
               </button>
             ) : (
               <span className="text-green-600 text-sm font-medium flex items-center gap-1">

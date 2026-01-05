@@ -6,7 +6,7 @@ export function QuickTallyPanel({ counters, transitions, onCounterChange, onTran
   const [isExpanded, setIsExpanded] = useState(true);
 
   const counterConfig = [
-    { key: 'taskCompletion', name: 'Task ✓', color: 'green' },
+    { key: 'taskCompletion', name: 'Task', color: 'green' },
     { key: 'vocalLevels', name: 'Vocals', color: 'blue' },
     { key: 'nfd', name: 'NFD', color: 'orange' },
     { key: 'elopement', name: 'Elope', color: 'red' },
@@ -23,7 +23,7 @@ export function QuickTallyPanel({ counters, transitions, onCounterChange, onTran
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex justify-between items-center px-4 py-2 font-medium text-gray-700 hover:bg-gray-50"
       >
-        <span>⚡ Quick Tally (tap to count)</span>
+        <span>Quick Tally (tap to count)</span>
         <span className="text-gray-400">{isExpanded ? '▲' : '▼'}</span>
       </button>
 

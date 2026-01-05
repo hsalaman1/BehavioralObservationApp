@@ -21,11 +21,11 @@ import { RecommendationsForm } from './components/Forms/RecommendationsForm';
 import { EnvironmentalNotes } from './components/Forms/EnvironmentalNotes';
 
 const TABS = [
-  { id: 'narrative', label: 'Narrative', icon: '📝' },
-  { id: 'visitNotes', label: 'Visit Notes', icon: '📋' },
-  { id: 'data', label: 'Data', icon: '📊' },
-  { id: 'abc', label: 'ABC', icon: '🔄' },
-  { id: 'recommendations', label: 'Recommendations', icon: '✅' },
+  { id: 'narrative', label: 'Narrative' },
+  { id: 'visitNotes', label: 'Visit Notes' },
+  { id: 'data', label: 'Data' },
+  { id: 'abc', label: 'ABC' },
+  { id: 'recommendations', label: 'Recommendations' },
 ];
 
 function App() {

@@ -36,7 +36,7 @@ export function DurationTimer({ name, colorClass, bgClass, borderClass, pulseCla
               : `${colorClass.replace('text-', 'bg-')} hover:opacity-90`
           }`}
         >
-          {isRunning ? '■ STOP' : '▶ START'}
+          {isRunning ? 'STOP' : 'START'}
         </button>
 
         {/* Accumulated Stats */}

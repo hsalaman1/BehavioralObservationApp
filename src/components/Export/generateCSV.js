@@ -4,7 +4,7 @@ export function generateCSV(data) {
   const lines = [];
 
   // Header
-  lines.push('ESI BEHAVIORAL OBSERVATION EXPORT');
+  lines.push('BEHAVIORAL OBSERVATION REPORT');
   lines.push('');
 
   // Session Information
@@ -94,13 +94,30 @@ function escapeCSV(value) {
   return stringValue;
 }
 
+function getInitials(name) {
+  if (!name) return 'OBS';
+  return name
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase())
+    .join('');
+}
+
+function formatDateForFilename(dateStr) {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('-');
+  const shortYear = year.slice(-2);
+  return `${parseInt(month)}.${parseInt(day)}.${shortYear}`;
+}
+
 export function downloadCSV(data) {
   const csv = generateCSV(data);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `ESI_${data.header.studentName || 'Observation'}_${data.header.date}.csv`;
+  const initials = getInitials(data.header.studentName);
+  const dateFormatted = formatDateForFilename(data.header.date);
+  link.download = `Behavioral Observation Report ${initials} ${dateFormatted}.csv`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

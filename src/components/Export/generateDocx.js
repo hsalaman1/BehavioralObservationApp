@@ -10,7 +10,7 @@ export async function generateDocx(data) {
         children: [
           // Title
           new Paragraph({
-            text: 'ESI Behavioral Observation Report',
+            text: 'Behavioral Observation Report',
             heading: HeadingLevel.HEADING_1,
             alignment: AlignmentType.CENTER,
           }),
@@ -211,8 +211,25 @@ function createDataTable(headers, rows) {
   });
 }
 
+function getInitials(name) {
+  if (!name) return 'OBS';
+  return name
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase())
+    .join('');
+}
+
+function formatDateForFilename(dateStr) {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('-');
+  const shortYear = year.slice(-2);
+  return `${parseInt(month)}.${parseInt(day)}.${shortYear}`;
+}
+
 export async function downloadDocx(data) {
   const doc = await generateDocx(data);
   const blob = await Packer.toBlob(doc);
-  saveAs(blob, `ESI_${data.header.studentName || 'Observation'}_${data.header.date}.docx`);
+  const initials = getInitials(data.header.studentName);
+  const dateFormatted = formatDateForFilename(data.header.date);
+  saveAs(blob, `Behavioral Observation Report ${initials} ${dateFormatted}.docx`);
 }
