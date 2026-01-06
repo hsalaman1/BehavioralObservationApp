@@ -18,11 +18,11 @@ import { BIPForm } from './components/Forms/BIPForm';
 import { BehaviorDataForm } from './components/Forms/BehaviorDataForm';
 import { ABCEntry } from './components/Forms/ABCEntry';
 import { RecommendationsForm } from './components/Forms/RecommendationsForm';
-import { EnvironmentalNotes } from './components/Forms/EnvironmentalNotes';
+import { ObservationNote } from './components/Forms/ObservationNote';
 
 const TABS = [
   { id: 'narrative', label: 'Narrative' },
-  { id: 'visitNotes', label: 'Visit Notes' },
+  { id: 'visitNotes', label: 'Classroom Environment' },
   { id: 'data', label: 'Data' },
   { id: 'abc', label: 'ABC' },
   { id: 'recommendations', label: 'Recommendations' },
@@ -56,6 +56,16 @@ function App() {
   // Handle transition changes
   const handleTransitionChange = useCallback((transitions) => {
     updateField('transitions', transitions);
+  }, [updateField]);
+
+  // Handle request help changes
+  const handleRequestHelpChange = useCallback((requestHelp) => {
+    updateField('requestHelp', requestHelp);
+  }, [updateField]);
+
+  // Handle compliance changes
+  const handleComplianceChange = useCallback((compliance) => {
+    updateField('compliance', compliance);
   }, [updateField]);
 
   // Narrative handlers
@@ -125,9 +135,9 @@ function App() {
       case 'narrative':
         return (
           <div className="space-y-4">
-            <EnvironmentalNotes
-              value={data.environmentalChanges}
-              onChange={(value) => updateField('environmentalChanges', value)}
+            <ObservationNote
+              value={data.observationNote}
+              onChange={(value) => updateField('observationNote', value)}
             />
             <NarrativePanel
               narratives={data.narratives}
@@ -189,8 +199,12 @@ function App() {
         <QuickTallyPanel
           counters={data.behaviorCounts}
           transitions={data.transitions}
+          requestHelp={data.requestHelp}
+          compliance={data.compliance}
           onCounterChange={handleCounterChange}
           onTransitionChange={handleTransitionChange}
+          onRequestHelpChange={handleRequestHelpChange}
+          onComplianceChange={handleComplianceChange}
         />
       </div>
 

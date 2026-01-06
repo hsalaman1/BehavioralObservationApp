@@ -46,6 +46,17 @@ function hasContent(value) {
   return true;
 }
 
+// Helper to format student tasks array
+function formatStudentTasks(tasks, otherText) {
+  if (!tasks || tasks.length === 0) return '';
+  return tasks.map(task => {
+    if (task === 'other' && otherText) {
+      return `Other: ${otherText}`;
+    }
+    return STUDENT_TASK_LABELS[task] || task;
+  }).join(', ');
+}
+
 export async function generateDocx(data) {
   const sections = [];
 
@@ -89,20 +100,39 @@ export async function generateDocx(data) {
     new Paragraph({ text: '' })
   );
 
-  // Environmental Changes (only if content exists)
-  if (hasContent(data.environmentalChanges)) {
+  // Observation Note (combines general note and narrative log)
+  const hasObservationNote = hasContent(data.observationNote) || data.narratives.length > 0;
+  if (hasObservationNote) {
     sections.push(
       new Paragraph({
-        text: 'Environmental Changes',
+        text: 'Observation Note',
         heading: HeadingLevel.HEADING_2,
-      }),
-      new Paragraph({ text: data.environmentalChanges }),
-      new Paragraph({ text: '' })
+      })
     );
+
+    // General observation note (paragraph)
+    if (hasContent(data.observationNote)) {
+      sections.push(
+        new Paragraph({ text: data.observationNote }),
+        new Paragraph({ text: '' })
+      );
+    }
+
+    // Timestamped narrative log (table)
+    if (data.narratives.length > 0) {
+      sections.push(
+        createDataTable(
+          ['Time', 'Narrative'],
+          data.narratives.map((n) => [n.time, n.text])
+        )
+      );
+    }
+    sections.push(new Paragraph({ text: '' }));
   }
 
   // Intervention Implementation
-  const hasInterventionContent = data.studentTask || data.studentEngagement || hasContent(data.interventionNotes);
+  const studentTasks = data.studentTasks || [];
+  const hasInterventionContent = studentTasks.length > 0 || data.studentEngagement || hasContent(data.interventionNotes);
   if (hasInterventionContent) {
     sections.push(
       new Paragraph({
@@ -112,12 +142,8 @@ export async function generateDocx(data) {
     );
 
     const interventionRows = [];
-    if (data.studentTask) {
-      let taskLabel = STUDENT_TASK_LABELS[data.studentTask] || data.studentTask;
-      if (data.studentTask === 'other' && data.studentTaskOther) {
-        taskLabel = `Other: ${data.studentTaskOther}`;
-      }
-      interventionRows.push(['Student Task', taskLabel]);
+    if (studentTasks.length > 0) {
+      interventionRows.push(['Student Task', formatStudentTasks(studentTasks, data.studentTaskOther)]);
     }
     if (data.studentEngagement) {
       interventionRows.push(['Student Engagement', ENGAGEMENT_LABELS[data.studentEngagement] || data.studentEngagement]);
@@ -287,6 +313,9 @@ export async function generateDocx(data) {
   );
 
   // Frequency Data
+  const requestHelp = data.requestHelp || { successes: 0, attempts: 0 };
+  const compliance = data.compliance || { successes: 0, attempts: 0 };
+
   sections.push(
     new Paragraph({
       text: 'Frequency Data',
@@ -307,29 +336,26 @@ export async function generateDocx(data) {
               : 0
           }%)`,
         ],
+        [
+          'Request Help',
+          `${requestHelp.successes}/${requestHelp.attempts} (${
+            requestHelp.attempts > 0
+              ? Math.round((requestHelp.successes / requestHelp.attempts) * 100)
+              : 0
+          }%)`,
+        ],
+        [
+          'Compliance',
+          `${compliance.successes}/${compliance.attempts} (${
+            compliance.attempts > 0
+              ? Math.round((compliance.successes / compliance.attempts) * 100)
+              : 0
+          }%)`,
+        ],
       ]
     ),
     new Paragraph({ text: '' })
   );
-
-  // Narrative Log
-  sections.push(
-    new Paragraph({
-      text: 'Narrative Log',
-      heading: HeadingLevel.HEADING_2,
-    })
-  );
-  if (data.narratives.length > 0) {
-    sections.push(
-      createDataTable(
-        ['Time', 'Narrative'],
-        data.narratives.map((n) => [n.time, n.text])
-      )
-    );
-  } else {
-    sections.push(new Paragraph({ text: 'No narrative entries recorded.' }));
-  }
-  sections.push(new Paragraph({ text: '' }));
 
   // ABC Data
   sections.push(

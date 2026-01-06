@@ -68,7 +68,8 @@ export function useObservationStorage() {
     },
     location: [],
     activity: [],
-    studentTask: '',
+    observationNote: '',
+    studentTasks: [],
     studentTaskOther: '',
     studentEngagement: '',
     interventionNotes: '',
@@ -102,6 +103,14 @@ export function useObservationStorage() {
       outOfArea: 0
     },
     transitions: {
+      successes: 0,
+      attempts: 0
+    },
+    requestHelp: {
+      successes: 0,
+      attempts: 0
+    },
+    compliance: {
       successes: 0,
       attempts: 0
     },

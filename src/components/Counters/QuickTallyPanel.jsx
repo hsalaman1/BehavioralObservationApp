@@ -1,8 +1,18 @@
 import { useState } from 'react';
 import { BehaviorCounter } from './BehaviorCounter';
 import { TransitionCounter } from './TransitionCounter';
+import { EventTracker } from './EventTracker';
 
-export function QuickTallyPanel({ counters, transitions, onCounterChange, onTransitionChange }) {
+export function QuickTallyPanel({
+  counters,
+  transitions,
+  requestHelp,
+  compliance,
+  onCounterChange,
+  onTransitionChange,
+  onRequestHelpChange,
+  onComplianceChange
+}) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   const counterConfig = [
@@ -39,11 +49,32 @@ export function QuickTallyPanel({ counters, transitions, onCounterChange, onTran
                 onChange={(value) => onCounterChange(key, value)}
               />
             ))}
-            <TransitionCounter
-              successes={transitions.successes}
-              attempts={transitions.attempts}
-              onChange={onTransitionChange}
-            />
+          </div>
+
+          {/* Event Recording Section */}
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <div className="text-xs text-gray-500 text-center mb-2">Event Recording</div>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <TransitionCounter
+                successes={transitions.successes}
+                attempts={transitions.attempts}
+                onChange={onTransitionChange}
+              />
+              <EventTracker
+                name="Request Help"
+                successes={requestHelp?.successes || 0}
+                attempts={requestHelp?.attempts || 0}
+                onChange={onRequestHelpChange}
+                bgColor="teal"
+              />
+              <EventTracker
+                name="Compliance"
+                successes={compliance?.successes || 0}
+                attempts={compliance?.attempts || 0}
+                onChange={onComplianceChange}
+                bgColor="purple"
+              />
+            </div>
           </div>
         </div>
       )}
