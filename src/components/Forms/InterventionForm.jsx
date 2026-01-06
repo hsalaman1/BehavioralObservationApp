@@ -28,7 +28,7 @@ export function InterventionForm({ data, onChange }) {
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 space-y-6">
       <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">
-        Intervention Implementation
+        Activity
       </h2>
 
       {/* Student Task - Now checkboxes */}
