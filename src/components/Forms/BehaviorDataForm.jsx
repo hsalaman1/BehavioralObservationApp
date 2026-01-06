@@ -119,15 +119,55 @@ export function BehaviorDataForm({ data, onChange }) {
                   <td className="px-3 py-2 text-center font-medium">{value}</td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Event Recording Data */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-2">Event Recording</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border rounded-lg overflow-hidden">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-3 py-2 text-left font-semibold text-gray-600">Event</th>
+                <th className="px-3 py-2 text-center font-semibold text-gray-600">Success / Attempts</th>
+                <th className="px-3 py-2 text-center font-semibold text-gray-600">Percentage</th>
+              </tr>
+            </thead>
+            <tbody>
               <tr className="border-t">
-                <td className="px-3 py-2">Transitions</td>
-                <td className="px-3 py-2 text-center font-medium">
+                <td className="px-3 py-2 font-medium text-indigo-600">Transitions</td>
+                <td className="px-3 py-2 text-center">
                   {data.transitions.successes}/{data.transitions.attempts}
-                  {data.transitions.attempts > 0 && (
-                    <span className="text-gray-500 ml-1">
-                      ({Math.round((data.transitions.successes / data.transitions.attempts) * 100)}%)
-                    </span>
-                  )}
+                </td>
+                <td className="px-3 py-2 text-center font-medium">
+                  {data.transitions.attempts > 0
+                    ? Math.round((data.transitions.successes / data.transitions.attempts) * 100)
+                    : 0}%
+                </td>
+              </tr>
+              <tr className="border-t">
+                <td className="px-3 py-2 font-medium text-teal-600">Request Help</td>
+                <td className="px-3 py-2 text-center">
+                  {data.requestHelp?.successes || 0}/{data.requestHelp?.attempts || 0}
+                </td>
+                <td className="px-3 py-2 text-center font-medium">
+                  {(data.requestHelp?.attempts || 0) > 0
+                    ? Math.round((data.requestHelp.successes / data.requestHelp.attempts) * 100)
+                    : 0}%
+                </td>
+              </tr>
+              <tr className="border-t">
+                <td className="px-3 py-2 font-medium text-purple-600">Compliance</td>
+                <td className="px-3 py-2 text-center">
+                  {data.compliance?.successes || 0}/{data.compliance?.attempts || 0}
+                </td>
+                <td className="px-3 py-2 text-center font-medium">
+                  {(data.compliance?.attempts || 0) > 0
+                    ? Math.round((data.compliance.successes / data.compliance.attempts) * 100)
+                    : 0}%
                 </td>
               </tr>
             </tbody>
