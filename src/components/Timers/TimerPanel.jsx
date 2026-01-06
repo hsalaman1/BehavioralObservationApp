@@ -1,0 +1,48 @@
+import { DurationTimer } from './DurationTimer';
+
+export function TimerPanel({ durationData, onDurationChange }) {
+  const handleCrisisChange = (data) => {
+    onDurationChange('crisis', data);
+  };
+
+  const handleOnTaskChange = (data) => {
+    onDurationChange('onTask', data);
+  };
+
+  const handleOffTaskChange = (data) => {
+    onDurationChange('offTask', data);
+  };
+
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      <DurationTimer
+        name="Crisis"
+        colorClass="text-red-600"
+        bgClass="bg-red-50"
+        borderClass="border-red-400"
+        pulseClass="timer-active-red"
+        data={durationData.crisis}
+        onDataChange={handleCrisisChange}
+      />
+      <DurationTimer
+        name="On Task"
+        colorClass="text-green-600"
+        bgClass="bg-green-50"
+        borderClass="border-green-400"
+        pulseClass="timer-active-green"
+        data={durationData.onTask}
+        onDataChange={handleOnTaskChange}
+      />
+      <DurationTimer
+        name="Off Task"
+        colorClass="text-amber-700"
+        bgClass="bg-amber-100"
+        borderClass="border-amber-500"
+        pulseClass="timer-active-orange"
+        buttonBorderClass="border-2 border-amber-900"
+        data={durationData.offTask}
+        onDataChange={handleOffTaskChange}
+      />
+    </div>
+  );
+}
