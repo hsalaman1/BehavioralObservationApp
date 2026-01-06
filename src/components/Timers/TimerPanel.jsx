@@ -35,11 +35,10 @@ export function TimerPanel({ durationData, onDurationChange }) {
       />
       <DurationTimer
         name="Off Task"
-        colorClass="text-amber-700"
-        bgClass="bg-amber-100"
-        borderClass="border-amber-500"
-        pulseClass="timer-active-orange"
-        buttonBorderClass="border-2 border-amber-900"
+        colorClass="text-blue-600"
+        bgClass="bg-blue-50"
+        borderClass="border-blue-400"
+        pulseClass="timer-active-blue"
         data={durationData.offTask}
         onDataChange={handleOffTaskChange}
       />

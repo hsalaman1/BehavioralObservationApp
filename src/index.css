@@ -50,6 +50,12 @@ input, textarea, button, select {
   100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
 }
 
+@keyframes pulse-ring-blue {
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
 .timer-active-red {
   animation: pulse-ring-red 1.5s infinite;
 }
@@ -60,6 +66,10 @@ input, textarea, button, select {
 
 .timer-active-orange {
   animation: pulse-ring-orange 1.5s infinite;
+}
+
+.timer-active-blue {
+  animation: pulse-ring-blue 1.5s infinite;
 }
 
 /* Print styles */

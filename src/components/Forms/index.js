@@ -6,4 +6,4 @@ export { BIPForm } from './BIPForm';
 export { BehaviorDataForm } from './BehaviorDataForm';
 export { ABCEntry } from './ABCEntry';
 export { RecommendationsForm } from './RecommendationsForm';
-export { EnvironmentalNotes } from './EnvironmentalNotes';
+export { ObservationNote } from './ObservationNote';

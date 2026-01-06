@@ -1,11 +1,11 @@
-import { RadioGroup } from '../UI/RadioGroup';
+import { Checkbox } from '../UI/Checkbox';
 import { TextArea } from '../UI/TextArea';
 
 const STUDENT_TASK_OPTIONS = [
-  { value: 'wholeGroup', label: 'Whole Group Instruction' },
-  { value: 'smallGroup', label: 'Small Group Instruction' },
-  { value: 'independent', label: 'Independent Work' },
-  { value: 'other', label: 'Other' }
+  { id: 'wholeGroup', label: 'Whole Group Instruction' },
+  { id: 'smallGroup', label: 'Small Group Instruction' },
+  { id: 'independent', label: 'Independent Work' },
+  { id: 'other', label: 'Other' }
 ];
 
 const ENGAGEMENT_OPTIONS = [
@@ -14,23 +14,37 @@ const ENGAGEMENT_OPTIONS = [
 ];
 
 export function InterventionForm({ data, onChange }) {
+  // Handle checkbox changes for student tasks (now an array)
+  const handleTaskChange = (taskId, checked) => {
+    const currentTasks = data.studentTasks || [];
+    const newTasks = checked
+      ? [...currentTasks, taskId]
+      : currentTasks.filter((t) => t !== taskId);
+    onChange('studentTasks', newTasks);
+  };
+
+  const studentTasks = data.studentTasks || [];
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 space-y-6">
       <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">
         Intervention Implementation
       </h2>
 
-      {/* Student Task */}
+      {/* Student Task - Now checkboxes */}
       <div>
         <h3 className="text-sm font-semibold text-gray-700 mb-2">Student Task</h3>
-        <RadioGroup
-          name="studentTask"
-          options={STUDENT_TASK_OPTIONS}
-          value={data.studentTask}
-          onChange={(value) => onChange('studentTask', value)}
-          className="flex-col gap-2"
-        />
-        {data.studentTask === 'other' && (
+        <div className="flex flex-wrap gap-4">
+          {STUDENT_TASK_OPTIONS.map(({ id, label }) => (
+            <Checkbox
+              key={id}
+              label={label}
+              checked={studentTasks.includes(id)}
+              onChange={(checked) => handleTaskChange(id, checked)}
+            />
+          ))}
+        </div>
+        {studentTasks.includes('other') && (
           <input
             type="text"
             value={data.studentTaskOther || ''}
@@ -44,13 +58,21 @@ export function InterventionForm({ data, onChange }) {
       {/* Student Engagement */}
       <div>
         <h3 className="text-sm font-semibold text-gray-700 mb-2">Student Engagement</h3>
-        <RadioGroup
-          name="studentEngagement"
-          options={ENGAGEMENT_OPTIONS}
-          value={data.studentEngagement}
-          onChange={(value) => onChange('studentEngagement', value)}
-          className="flex-col gap-2"
-        />
+        <div className="flex flex-wrap gap-4">
+          {ENGAGEMENT_OPTIONS.map(({ value, label }) => (
+            <label key={value} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="studentEngagement"
+                value={value}
+                checked={data.studentEngagement === value}
+                onChange={(e) => onChange('studentEngagement', e.target.value)}
+                className="w-4 h-4 text-blue-600"
+              />
+              <span className="text-sm text-gray-700">{label}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
       {/* Notes */}
