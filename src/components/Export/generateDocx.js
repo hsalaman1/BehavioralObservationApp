@@ -89,16 +89,40 @@ export async function generateDocx(data) {
     new Paragraph({ text: '' })
   );
 
-  // Location & Activity
+  // Setting / Activity (combined with activity data)
+  const studentTasks = data.studentTasks || [];
+
   sections.push(
     new Paragraph({
-      text: 'Location & Activity',
+      text: 'Setting / Activity',
       heading: HeadingLevel.HEADING_2,
     }),
     new Paragraph({ text: `Location: ${formatArrayAsLabels(data.location) || 'N/A'}` }),
-    new Paragraph({ text: `Activity: ${formatArrayAsLabels(data.activity) || 'N/A'}` }),
-    new Paragraph({ text: '' })
+    new Paragraph({ text: `Activity: ${formatArrayAsLabels(data.activity) || 'N/A'}` })
   );
+
+  // Add student task and engagement if present
+  if (studentTasks.length > 0) {
+    sections.push(
+      new Paragraph({ text: `Student Task: ${formatStudentTasks(studentTasks, data.studentTaskOther)}` })
+    );
+  }
+  if (data.studentEngagement) {
+    sections.push(
+      new Paragraph({ text: `Student Engagement: ${ENGAGEMENT_LABELS[data.studentEngagement] || data.studentEngagement}` })
+    );
+  }
+  if (hasContent(data.interventionNotes)) {
+    sections.push(
+      new Paragraph({
+        children: [
+          new TextRun({ text: 'Activity Notes: ', bold: true }),
+          new TextRun({ text: data.interventionNotes })
+        ]
+      })
+    );
+  }
+  sections.push(new Paragraph({ text: '' }));
 
   // Observation Note (combines general note and narrative log)
   const hasObservationNote = hasContent(data.observationNote) || data.narratives.length > 0;
@@ -125,43 +149,6 @@ export async function generateDocx(data) {
           ['Time', 'Narrative'],
           data.narratives.map((n) => [n.time, n.text])
         )
-      );
-    }
-    sections.push(new Paragraph({ text: '' }));
-  }
-
-  // Intervention Implementation
-  const studentTasks = data.studentTasks || [];
-  const hasInterventionContent = studentTasks.length > 0 || data.studentEngagement || hasContent(data.interventionNotes);
-  if (hasInterventionContent) {
-    sections.push(
-      new Paragraph({
-        text: 'Intervention Implementation',
-        heading: HeadingLevel.HEADING_2,
-      })
-    );
-
-    const interventionRows = [];
-    if (studentTasks.length > 0) {
-      interventionRows.push(['Student Task', formatStudentTasks(studentTasks, data.studentTaskOther)]);
-    }
-    if (data.studentEngagement) {
-      interventionRows.push(['Student Engagement', ENGAGEMENT_LABELS[data.studentEngagement] || data.studentEngagement]);
-    }
-
-    if (interventionRows.length > 0) {
-      sections.push(createInfoTable(interventionRows));
-    }
-
-    if (hasContent(data.interventionNotes)) {
-      sections.push(
-        new Paragraph({ text: '' }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: 'Notes: ', bold: true }),
-            new TextRun({ text: data.interventionNotes })
-          ]
-        })
       );
     }
     sections.push(new Paragraph({ text: '' }));
