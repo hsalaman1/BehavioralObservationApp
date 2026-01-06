@@ -48,7 +48,7 @@ export function useLocalStorage(key, initialValue) {
 
 // Hook specifically for observation data with auto-save
 export function useObservationStorage() {
-  const STORAGE_KEY = 'esi-observation-data';
+  const STORAGE_KEY = 'observation-data';
 
   const getInitialState = () => ({
     id: crypto.randomUUID(),

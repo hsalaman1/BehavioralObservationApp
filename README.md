@@ -1,4 +1,4 @@
-# ESI Behavioral Observation App
+# Behavioral Observation App
 
 A web-based behavioral observation application for Board Certified Behavior Analysts (BCBAs) conducting school visits. The app is tablet-friendly, works offline, and enables rapid data collection during live observations.
 
@@ -11,7 +11,7 @@ A web-based behavioral observation application for Board Certified Behavior Anal
 - **Quick Tally Counters** - Tap-to-increment buttons for frequency data collection (Task Completion, Vocals, NFD, Elopement, Aggression, Property Destruction, SIB, Out of Seat, Out of Area)
 - **Transition Tracking** - Success/failure tracking with automatic percentage calculation
 
-### Form Sections (ESI Paper Form Compatible)
+### Form Sections
 
 - **Visit Notes** - Student info, location, activity checkboxes
 - **Intervention Implementation** - Student task, engagement level, notes
@@ -101,4 +101,4 @@ src/
 
 ## License
 
-Private - ESI Internal Use
+Private - Internal Use
