@@ -66,13 +66,13 @@ export function EventTracker({ name, successes, attempts, onChange, bgColor = 'i
           onClick={handleSuccessClick}
           className="flex-1 py-1 px-2 bg-green-500 text-white text-xs font-medium rounded hover:bg-green-600 active:scale-95"
         >
-          ✓ Yes
+          ✓ Success
         </button>
         <button
           onClick={handleFailClick}
           className="flex-1 py-1 px-2 bg-red-500 text-white text-xs font-medium rounded hover:bg-red-600 active:scale-95"
         >
-          ✗ No
+          ✗ Fail
         </button>
       </div>
       <div className="flex gap-1 mt-1">
