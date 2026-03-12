@@ -339,7 +339,7 @@ function App() {
   };
 
   // Show setup screen if session mode not yet chosen
-  if (data.sessionMode === null) {
+  if (!data.sessionMode) {
     return <SessionSetup onSetupComplete={handleSetupComplete} />;
   }
 
