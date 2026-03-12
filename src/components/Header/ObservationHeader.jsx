@@ -1,6 +1,7 @@
 import { useTimestamp } from '../../hooks/useTimestamp';
+import { STUDENT_COLORS } from '../SessionSetup/SessionSetup';
 
-export function ObservationHeader({ header, isObserving, onHeaderChange, onStart, onEnd }) {
+export function ObservationHeader({ header, isObserving, isMultiMode, students, onHeaderChange, onStart, onEnd }) {
   const { getTimestamp } = useTimestamp();
 
   const handleStartObservation = () => {
@@ -61,15 +62,31 @@ export function ObservationHeader({ header, isObserving, onHeaderChange, onStart
           </div>
         </div>
 
+        {/* Multi-student indicator */}
+        {isMultiMode && students && students.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {students.map((student, i) => {
+              const color = STUDENT_COLORS[i];
+              return (
+                <span key={i} className={`text-xs font-medium px-2 py-0.5 rounded-full ${color.bg} ${color.text} ${color.border} border`}>
+                  {student.name}
+                </span>
+              );
+            })}
+          </div>
+        )}
+
         {/* Quick Header Fields */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-          <input
-            type="text"
-            placeholder="Student Name"
-            value={header.studentName}
-            onChange={(e) => handleFieldChange('studentName', e.target.value)}
-            className="border rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-          />
+        <div className={`grid ${isMultiMode ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4'} gap-2 text-sm`}>
+          {!isMultiMode && (
+            <input
+              type="text"
+              placeholder="Student Name"
+              value={header.studentName}
+              onChange={(e) => handleFieldChange('studentName', e.target.value)}
+              className="border rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          )}
           <input
             type="text"
             placeholder="School"

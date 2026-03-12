@@ -1,12 +1,15 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useObservationStorage } from './hooks/useLocalStorage';
+import { useObservationStorage, getStudentDefaults } from './hooks/useLocalStorage';
 
 // Components
+import { SessionSetup } from './components/SessionSetup/SessionSetup';
 import { ObservationHeader } from './components/Header/ObservationHeader';
 import { TimerPanel } from './components/Timers/TimerPanel';
 import { QuickTallyPanel } from './components/Counters/QuickTallyPanel';
 import { TabNavigation } from './components/UI/TabNavigation';
 import { NarrativePanel } from './components/Narrative/NarrativePanel';
+import { MultiStudentPanel } from './components/MultiStudent/MultiStudentPanel';
+import { MultiNarrativeTable } from './components/MultiStudent/MultiNarrativeTable';
 import { ExportButtons } from './components/Export/ExportButtons';
 
 // Forms
@@ -20,7 +23,7 @@ import { ABCEntry } from './components/Forms/ABCEntry';
 import { RecommendationsForm } from './components/Forms/RecommendationsForm';
 import { ObservationNote } from './components/Forms/ObservationNote';
 
-const TABS = [
+const TABS_SINGLE = [
   { id: 'narrative', label: 'Narrative' },
   { id: 'visitNotes', label: 'Classroom Environment' },
   { id: 'data', label: 'Data' },
@@ -28,47 +31,65 @@ const TABS = [
   { id: 'recommendations', label: 'Recommendations' },
 ];
 
+const TABS_MULTI = [
+  { id: 'narrative', label: 'Narratives' },
+  { id: 'visitNotes', label: 'Classroom Environment' },
+  { id: 'data', label: 'Data' },
+  { id: 'abc', label: 'ABC' },
+  { id: 'recommendations', label: 'Recommendations' },
+];
+
 function App() {
-  const { data, setData, updateField, resetObservation, lastSaved } = useObservationStorage();
+  const { data, setData, updateField, updateStudentField, resetObservation, lastSaved } = useObservationStorage();
   const [activeTab, setActiveTab] = useState('narrative');
   const [isObserving, setIsObserving] = useState(false);
+  const [activeStudentIndex, setActiveStudentIndex] = useState(0);
+
+  const isMultiMode = data.sessionMode === 'multi';
 
   // Sync observing state
   useEffect(() => {
     setIsObserving(!!data.header.startTime && !data.header.endTime);
   }, [data.header.startTime, data.header.endTime]);
 
+  // Handle session setup
+  const handleSetupComplete = useCallback(({ mode, students }) => {
+    setData(prev => {
+      const newData = { ...prev, sessionMode: mode, lastModified: new Date().toISOString() };
+      if (mode === 'multi') {
+        newData.students = students.map(name => getStudentDefaults(name));
+      }
+      return newData;
+    });
+  }, [setData]);
+
   // Handle header changes
   const handleHeaderChange = useCallback((field, value) => {
     updateField('header.' + field, value);
   }, [updateField]);
 
-  // Handle duration timer changes
+  // === SINGLE-STUDENT HANDLERS ===
+
   const handleDurationChange = useCallback((timerName, timerData) => {
     updateField('durationData.' + timerName, timerData);
   }, [updateField]);
 
-  // Handle counter changes
   const handleCounterChange = useCallback((counterName, value) => {
     updateField('behaviorCounts.' + counterName, value);
   }, [updateField]);
 
-  // Handle transition changes
   const handleTransitionChange = useCallback((transitions) => {
     updateField('transitions', transitions);
   }, [updateField]);
 
-  // Handle request help changes
   const handleRequestHelpChange = useCallback((requestHelp) => {
     updateField('requestHelp', requestHelp);
   }, [updateField]);
 
-  // Handle compliance changes
   const handleComplianceChange = useCallback((compliance) => {
     updateField('compliance', compliance);
   }, [updateField]);
 
-  // Narrative handlers
   const handleAddNarrative = useCallback((entry) => {
     setData((prev) => ({
       ...prev,
@@ -95,32 +116,98 @@ function App() {
     }));
   }, [setData]);
 
-  // ABC handlers
-  const handleAddABC = useCallback((entry) => {
-    setData((prev) => ({
-      ...prev,
-      abcEntries: [...prev.abcEntries, entry],
-      lastModified: new Date().toISOString(),
-    }));
+  // === MULTI-STUDENT HANDLERS ===
+
+  const handleStudentFieldChange = useCallback((studentIndex, path, value) => {
+    updateStudentField(studentIndex, path, value);
+  }, [updateStudentField]);
+
+  const handleAddStudentNarrative = useCallback((studentIndex, entry) => {
+    setData((prev) => {
+      const newStudents = [...prev.students];
+      const student = { ...newStudents[studentIndex] };
+      student.narratives = [...(student.narratives || []), entry];
+      newStudents[studentIndex] = student;
+      return {
+        ...prev,
+        students: newStudents,
+        lastModified: new Date().toISOString(),
+      };
+    });
   }, [setData]);
+
+  const handleDeleteStudentNarrative = useCallback((studentIndex, narrativeId) => {
+    setData((prev) => {
+      const newStudents = [...prev.students];
+      const student = { ...newStudents[studentIndex] };
+      student.narratives = student.narratives.filter(n => n.id !== narrativeId);
+      newStudents[studentIndex] = student;
+      return {
+        ...prev,
+        students: newStudents,
+        lastModified: new Date().toISOString(),
+      };
+    });
+  }, [setData]);
+
+  // ABC handlers (shared in single, per-student in multi)
+  const handleAddABC = useCallback((entry) => {
+    if (isMultiMode) {
+      setData((prev) => {
+        const newStudents = [...prev.students];
+        const student = { ...newStudents[activeStudentIndex] };
+        student.abcEntries = [...(student.abcEntries || []), entry];
+        newStudents[activeStudentIndex] = student;
+        return { ...prev, students: newStudents, lastModified: new Date().toISOString() };
+      });
+    } else {
+      setData((prev) => ({
+        ...prev,
+        abcEntries: [...prev.abcEntries, entry],
+        lastModified: new Date().toISOString(),
+      }));
+    }
+  }, [setData, isMultiMode, activeStudentIndex]);
 
   const handleEditABC = useCallback((id, updatedEntry) => {
-    setData((prev) => ({
-      ...prev,
-      abcEntries: prev.abcEntries.map((e) =>
-        e.id === id ? { ...e, ...updatedEntry } : e
-      ),
-      lastModified: new Date().toISOString(),
-    }));
-  }, [setData]);
+    if (isMultiMode) {
+      setData((prev) => {
+        const newStudents = [...prev.students];
+        const student = { ...newStudents[activeStudentIndex] };
+        student.abcEntries = student.abcEntries.map(e =>
+          e.id === id ? { ...e, ...updatedEntry } : e
+        );
+        newStudents[activeStudentIndex] = student;
+        return { ...prev, students: newStudents, lastModified: new Date().toISOString() };
+      });
+    } else {
+      setData((prev) => ({
+        ...prev,
+        abcEntries: prev.abcEntries.map((e) =>
+          e.id === id ? { ...e, ...updatedEntry } : e
+        ),
+        lastModified: new Date().toISOString(),
+      }));
+    }
+  }, [setData, isMultiMode, activeStudentIndex]);
 
   const handleDeleteABC = useCallback((id) => {
-    setData((prev) => ({
-      ...prev,
-      abcEntries: prev.abcEntries.filter((e) => e.id !== id),
-      lastModified: new Date().toISOString(),
-    }));
-  }, [setData]);
+    if (isMultiMode) {
+      setData((prev) => {
+        const newStudents = [...prev.students];
+        const student = { ...newStudents[activeStudentIndex] };
+        student.abcEntries = student.abcEntries.filter(e => e.id !== id);
+        newStudents[activeStudentIndex] = student;
+        return { ...prev, students: newStudents, lastModified: new Date().toISOString() };
+      });
+    } else {
+      setData((prev) => ({
+        ...prev,
+        abcEntries: prev.abcEntries.filter((e) => e.id !== id),
+        lastModified: new Date().toISOString(),
+      }));
+    }
+  }, [setData, isMultiMode, activeStudentIndex]);
 
   // Clear all data
   const handleClear = useCallback(() => {
@@ -133,6 +220,20 @@ function App() {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'narrative':
+        if (isMultiMode) {
+          return (
+            <div className="space-y-4">
+              <ObservationNote
+                value={data.observationNote}
+                onChange={(value) => updateField('observationNote', value)}
+              />
+              <MultiNarrativeTable
+                students={data.students}
+                onDeleteNarrative={handleDeleteStudentNarrative}
+              />
+            </div>
+          );
+        }
         return (
           <div className="space-y-4">
             <ObservationNote
@@ -158,8 +259,70 @@ function App() {
           </div>
         );
       case 'data':
+        if (isMultiMode) {
+          return (
+            <div className="space-y-4">
+              {/* Student selector tabs for data view */}
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {data.students.map((student, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveStudentIndex(i)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                      activeStudentIndex === i
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                    }`}
+                  >
+                    {student.name}
+                  </button>
+                ))}
+              </div>
+              <BehaviorDataForm
+                data={{
+                  ...data,
+                  behaviorCounts: data.students[activeStudentIndex].behaviorCounts,
+                  transitions: data.students[activeStudentIndex].transitions,
+                  requestHelp: data.students[activeStudentIndex].requestHelp,
+                  compliance: data.students[activeStudentIndex].compliance,
+                  durationData: data.students[activeStudentIndex].durationData,
+                }}
+                onChange={updateField}
+              />
+            </div>
+          );
+        }
         return <BehaviorDataForm data={data} onChange={updateField} />;
       case 'abc':
+        if (isMultiMode) {
+          const currentStudent = data.students[activeStudentIndex];
+          return (
+            <div className="space-y-4">
+              {/* Student selector tabs for ABC view */}
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {data.students.map((student, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveStudentIndex(i)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                      activeStudentIndex === i
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                    }`}
+                  >
+                    {student.name}
+                  </button>
+                ))}
+              </div>
+              <ABCEntry
+                entries={currentStudent.abcEntries || []}
+                onAdd={handleAddABC}
+                onEdit={handleEditABC}
+                onDelete={handleDeleteABC}
+              />
+            </div>
+          );
+        }
         return (
           <ABCEntry
             entries={data.abcEntries}
@@ -175,43 +338,65 @@ function App() {
     }
   };
 
+  // Show setup screen if session mode not yet chosen
+  if (data.sessionMode === null) {
+    return <SessionSetup onSetupComplete={handleSetupComplete} />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 pb-24">
       {/* Header */}
       <ObservationHeader
         header={data.header}
         isObserving={isObserving}
+        isMultiMode={isMultiMode}
+        students={data.students}
         onHeaderChange={handleHeaderChange}
         onStart={() => setIsObserving(true)}
         onEnd={() => setIsObserving(false)}
       />
 
-      {/* Duration Timers */}
-      <div className="max-w-4xl mx-auto px-4 py-3">
-        <TimerPanel
-          durationData={data.durationData}
-          onDurationChange={handleDurationChange}
-        />
-      </div>
+      {isMultiMode ? (
+        <>
+          {/* Multi-Student Cards */}
+          <div className="max-w-4xl mx-auto px-4 py-3">
+            <MultiStudentPanel
+              students={data.students}
+              onStudentFieldChange={handleStudentFieldChange}
+              onAddNarrative={handleAddStudentNarrative}
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Duration Timers (single student) */}
+          <div className="max-w-4xl mx-auto px-4 py-3">
+            <TimerPanel
+              durationData={data.durationData}
+              onDurationChange={handleDurationChange}
+            />
+          </div>
 
-      {/* Quick Tally Panel */}
-      <div className="max-w-4xl mx-auto px-4 mb-3">
-        <QuickTallyPanel
-          counters={data.behaviorCounts}
-          transitions={data.transitions}
-          requestHelp={data.requestHelp}
-          compliance={data.compliance}
-          onCounterChange={handleCounterChange}
-          onTransitionChange={handleTransitionChange}
-          onRequestHelpChange={handleRequestHelpChange}
-          onComplianceChange={handleComplianceChange}
-        />
-      </div>
+          {/* Quick Tally Panel (single student) */}
+          <div className="max-w-4xl mx-auto px-4 mb-3">
+            <QuickTallyPanel
+              counters={data.behaviorCounts}
+              transitions={data.transitions}
+              requestHelp={data.requestHelp}
+              compliance={data.compliance}
+              onCounterChange={handleCounterChange}
+              onTransitionChange={handleTransitionChange}
+              onRequestHelpChange={handleRequestHelpChange}
+              onComplianceChange={handleComplianceChange}
+            />
+          </div>
+        </>
+      )}
 
       {/* Tab Navigation */}
       <div className="max-w-4xl mx-auto px-4 mb-3">
         <TabNavigation
-          tabs={TABS}
+          tabs={isMultiMode ? TABS_MULTI : TABS_SINGLE}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />

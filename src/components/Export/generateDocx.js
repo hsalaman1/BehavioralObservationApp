@@ -57,8 +57,116 @@ function formatStudentTasks(tasks, otherText) {
   }).join(', ');
 }
 
+// Generate per-student data sections for multi-student mode
+function generateStudentSections(student) {
+  const sections = [];
+  const requestHelp = student.requestHelp || { successes: 0, attempts: 0 };
+  const compliance = student.compliance || { successes: 0, attempts: 0 };
+
+  // Student header
+  sections.push(
+    new Paragraph({
+      text: student.name,
+      heading: HeadingLevel.HEADING_2,
+    }),
+    new Paragraph({ text: '' })
+  );
+
+  // Duration Data
+  sections.push(
+    new Paragraph({
+      text: 'Duration Data',
+      heading: HeadingLevel.HEADING_3,
+    }),
+    createDataTable(
+      ['Behavior', 'Total Duration', 'Instances'],
+      [
+        ['Crisis', formatTotalDuration(student.durationData.crisis.totalSeconds), String(student.durationData.crisis.instances)],
+        ['On Task', formatTotalDuration(student.durationData.onTask.totalSeconds), String(student.durationData.onTask.instances)],
+        ['Off Task', formatTotalDuration(student.durationData.offTask.totalSeconds), String(student.durationData.offTask.instances)],
+      ]
+    ),
+    new Paragraph({ text: '' })
+  );
+
+  // Frequency Data
+  sections.push(
+    new Paragraph({
+      text: 'Frequency Data',
+      heading: HeadingLevel.HEADING_3,
+    }),
+    createDataTable(
+      ['Behavior', 'Count'],
+      [
+        ...Object.entries(student.behaviorCounts).map(([key, value]) => [
+          formatCamelCase(key),
+          String(value),
+        ]),
+        [
+          'Transitions',
+          `${student.transitions.successes}/${student.transitions.attempts} (${
+            student.transitions.attempts > 0
+              ? Math.round((student.transitions.successes / student.transitions.attempts) * 100)
+              : 0
+          }%)`,
+        ],
+        [
+          'Request Help',
+          `${requestHelp.successes}/${requestHelp.attempts} (${
+            requestHelp.attempts > 0
+              ? Math.round((requestHelp.successes / requestHelp.attempts) * 100)
+              : 0
+          }%)`,
+        ],
+        [
+          'Compliance',
+          `${compliance.successes}/${compliance.attempts} (${
+            compliance.attempts > 0
+              ? Math.round((compliance.successes / compliance.attempts) * 100)
+              : 0
+          }%)`,
+        ],
+      ]
+    ),
+    new Paragraph({ text: '' })
+  );
+
+  // Narrative Log
+  if (student.narratives && student.narratives.length > 0) {
+    sections.push(
+      new Paragraph({
+        text: 'Narrative Log',
+        heading: HeadingLevel.HEADING_3,
+      }),
+      createDataTable(
+        ['Time', 'Narrative'],
+        student.narratives.map((n) => [n.time, n.text])
+      ),
+      new Paragraph({ text: '' })
+    );
+  }
+
+  // ABC Data
+  if (student.abcEntries && student.abcEntries.length > 0) {
+    sections.push(
+      new Paragraph({
+        text: 'ABC Data',
+        heading: HeadingLevel.HEADING_3,
+      }),
+      createDataTable(
+        ['Time', 'Antecedent', 'Behavior', 'Consequence'],
+        student.abcEntries.map((e) => [e.time, e.antecedent, e.behavior, e.consequence])
+      ),
+      new Paragraph({ text: '' })
+    );
+  }
+
+  return sections;
+}
+
 export async function generateDocx(data) {
   const sections = [];
+  const isMulti = data.sessionMode === 'multi' && data.students && data.students.length > 0;
 
   // Title
   sections.push(
@@ -70,22 +178,45 @@ export async function generateDocx(data) {
     new Paragraph({ text: '' })
   );
 
+  if (isMulti) {
+    sections.push(
+      new Paragraph({
+        text: '(Multi-Student Observation)',
+        alignment: AlignmentType.CENTER,
+        children: [new TextRun({ text: '(Multi-Student Observation)', italics: true, color: '666666' })],
+      }),
+      new Paragraph({ text: '' })
+    );
+  }
+
   // Session Information
+  const sessionInfoRows = isMulti
+    ? [
+        ['Students', data.students.map(s => s.name).join(', ')],
+        ['School', data.header.school],
+        ['Date', data.header.date],
+        ['Observer', data.header.observer],
+        ['Time', `${data.header.startTime} - ${data.header.endTime}`],
+        ['RBT Present', data.header.rbtPresent === 'yes' ? 'Yes' : data.header.rbtPresent === 'no' ? 'No' : data.header.rbtPresent === 'na' ? 'N/A' : 'N/A'],
+        data.header.rbtName ? ['RBT Name', data.header.rbtName] : null,
+      ].filter(Boolean)
+    : [
+        ['Student Name', data.header.studentName],
+        ['Student ID', data.header.studentId || 'N/A'],
+        ['School', data.header.school],
+        ['Date', data.header.date],
+        ['Observer', data.header.observer],
+        ['Time', `${data.header.startTime} - ${data.header.endTime}`],
+        ['RBT Present', data.header.rbtPresent === 'yes' ? 'Yes' : data.header.rbtPresent === 'no' ? 'No' : data.header.rbtPresent === 'na' ? 'N/A' : 'N/A'],
+        data.header.rbtName ? ['RBT Name', data.header.rbtName] : null,
+      ].filter(Boolean);
+
   sections.push(
     new Paragraph({
       text: 'Session Information',
       heading: HeadingLevel.HEADING_2,
     }),
-    createInfoTable([
-      ['Student Name', data.header.studentName],
-      ['Student ID', data.header.studentId || 'N/A'],
-      ['School', data.header.school],
-      ['Date', data.header.date],
-      ['Observer', data.header.observer],
-      ['Time', `${data.header.startTime} - ${data.header.endTime}`],
-      ['RBT Present', data.header.rbtPresent === 'yes' ? 'Yes' : data.header.rbtPresent === 'no' ? 'No' : data.header.rbtPresent === 'na' ? 'N/A' : 'N/A'],
-      data.header.rbtName ? ['RBT Name', data.header.rbtName] : null,
-    ].filter(Boolean)),
+    createInfoTable(sessionInfoRows),
     new Paragraph({ text: '' })
   );
 
@@ -124,8 +255,8 @@ export async function generateDocx(data) {
   }
   sections.push(new Paragraph({ text: '' }));
 
-  // Observation Note (combines general note and narrative log)
-  const hasObservationNote = hasContent(data.observationNote) || data.narratives.length > 0;
+  // Observation Note
+  const hasObservationNote = hasContent(data.observationNote) || (isMulti ? false : data.narratives.length > 0);
   if (hasObservationNote) {
     sections.push(
       new Paragraph({
@@ -134,7 +265,6 @@ export async function generateDocx(data) {
       })
     );
 
-    // General observation note (paragraph)
     if (hasContent(data.observationNote)) {
       sections.push(
         new Paragraph({ text: data.observationNote }),
@@ -142,8 +272,8 @@ export async function generateDocx(data) {
       );
     }
 
-    // Timestamped narrative log (table)
-    if (data.narratives.length > 0) {
+    // Timestamped narrative log (single student only - multi uses per-student sections)
+    if (!isMulti && data.narratives.length > 0) {
       sections.push(
         createDataTable(
           ['Time', 'Narrative'],
@@ -205,7 +335,6 @@ export async function generateDocx(data) {
     );
 
     if (data.supports.length > 0) {
-      // Create a table showing each support item with checkmark
       const supportsTableRows = [];
       Object.entries(SUPPORTS_LABELS).forEach(([key, label]) => {
         const isChecked = data.supports.includes(key);
@@ -255,7 +384,6 @@ export async function generateDocx(data) {
         })
       );
 
-      // If student has BIP, show the implementation details
       if (data.bip.hasBIP === true) {
         sections.push(new Paragraph({ text: '' }));
         const bipRows = [
@@ -282,86 +410,95 @@ export async function generateDocx(data) {
     sections.push(new Paragraph({ text: '' }));
   }
 
-  // Duration Data
-  sections.push(
-    new Paragraph({
-      text: 'Duration Data',
-      heading: HeadingLevel.HEADING_2,
-    }),
-    createDataTable(
-      ['Behavior', 'Total Duration', 'Instances'],
-      [
-        ['Crisis', formatTotalDuration(data.durationData.crisis.totalSeconds), String(data.durationData.crisis.instances)],
-        ['On Task', formatTotalDuration(data.durationData.onTask.totalSeconds), String(data.durationData.onTask.instances)],
-        ['Off Task', formatTotalDuration(data.durationData.offTask.totalSeconds), String(data.durationData.offTask.instances)],
-      ]
-    ),
-    new Paragraph({ text: '' })
-  );
-
-  // Frequency Data
-  const requestHelp = data.requestHelp || { successes: 0, attempts: 0 };
-  const compliance = data.compliance || { successes: 0, attempts: 0 };
-
-  sections.push(
-    new Paragraph({
-      text: 'Frequency Data',
-      heading: HeadingLevel.HEADING_2,
-    }),
-    createDataTable(
-      ['Behavior', 'Count'],
-      [
-        ...Object.entries(data.behaviorCounts).map(([key, value]) => [
-          formatCamelCase(key),
-          String(value),
-        ]),
-        [
-          'Transitions',
-          `${data.transitions.successes}/${data.transitions.attempts} (${
-            data.transitions.attempts > 0
-              ? Math.round((data.transitions.successes / data.transitions.attempts) * 100)
-              : 0
-          }%)`,
-        ],
-        [
-          'Request Help',
-          `${requestHelp.successes}/${requestHelp.attempts} (${
-            requestHelp.attempts > 0
-              ? Math.round((requestHelp.successes / requestHelp.attempts) * 100)
-              : 0
-          }%)`,
-        ],
-        [
-          'Compliance',
-          `${compliance.successes}/${compliance.attempts} (${
-            compliance.attempts > 0
-              ? Math.round((compliance.successes / compliance.attempts) * 100)
-              : 0
-          }%)`,
-        ],
-      ]
-    ),
-    new Paragraph({ text: '' })
-  );
-
-  // ABC Data
-  sections.push(
-    new Paragraph({
-      text: 'ABC Data',
-      heading: HeadingLevel.HEADING_2,
-    })
-  );
-  if (data.abcEntries.length > 0) {
-    sections.push(
-      createDataTable(
-        ['Time', 'Antecedent', 'Behavior', 'Consequence'],
-        data.abcEntries.map((e) => [e.time, e.antecedent, e.behavior, e.consequence])
-      )
-    );
+  if (isMulti) {
+    // Per-student behavioral data sections
+    data.students.forEach((student) => {
+      sections.push(...generateStudentSections(student));
+    });
   } else {
-    sections.push(new Paragraph({ text: 'No ABC entries recorded.' }));
+    // Single student data sections
+
+    // Duration Data
+    sections.push(
+      new Paragraph({
+        text: 'Duration Data',
+        heading: HeadingLevel.HEADING_2,
+      }),
+      createDataTable(
+        ['Behavior', 'Total Duration', 'Instances'],
+        [
+          ['Crisis', formatTotalDuration(data.durationData.crisis.totalSeconds), String(data.durationData.crisis.instances)],
+          ['On Task', formatTotalDuration(data.durationData.onTask.totalSeconds), String(data.durationData.onTask.instances)],
+          ['Off Task', formatTotalDuration(data.durationData.offTask.totalSeconds), String(data.durationData.offTask.instances)],
+        ]
+      ),
+      new Paragraph({ text: '' })
+    );
+
+    // Frequency Data
+    const requestHelp = data.requestHelp || { successes: 0, attempts: 0 };
+    const compliance = data.compliance || { successes: 0, attempts: 0 };
+
+    sections.push(
+      new Paragraph({
+        text: 'Frequency Data',
+        heading: HeadingLevel.HEADING_2,
+      }),
+      createDataTable(
+        ['Behavior', 'Count'],
+        [
+          ...Object.entries(data.behaviorCounts).map(([key, value]) => [
+            formatCamelCase(key),
+            String(value),
+          ]),
+          [
+            'Transitions',
+            `${data.transitions.successes}/${data.transitions.attempts} (${
+              data.transitions.attempts > 0
+                ? Math.round((data.transitions.successes / data.transitions.attempts) * 100)
+                : 0
+            }%)`,
+          ],
+          [
+            'Request Help',
+            `${requestHelp.successes}/${requestHelp.attempts} (${
+              requestHelp.attempts > 0
+                ? Math.round((requestHelp.successes / requestHelp.attempts) * 100)
+                : 0
+            }%)`,
+          ],
+          [
+            'Compliance',
+            `${compliance.successes}/${compliance.attempts} (${
+              compliance.attempts > 0
+                ? Math.round((compliance.successes / compliance.attempts) * 100)
+                : 0
+            }%)`,
+          ],
+        ]
+      ),
+      new Paragraph({ text: '' })
+    );
+
+    // ABC Data
+    sections.push(
+      new Paragraph({
+        text: 'ABC Data',
+        heading: HeadingLevel.HEADING_2,
+      })
+    );
+    if (data.abcEntries.length > 0) {
+      sections.push(
+        createDataTable(
+          ['Time', 'Antecedent', 'Behavior', 'Consequence'],
+          data.abcEntries.map((e) => [e.time, e.antecedent, e.behavior, e.consequence])
+        )
+      );
+    } else {
+      sections.push(new Paragraph({ text: 'No ABC entries recorded.' }));
+    }
+    sections.push(new Paragraph({ text: '' }));
   }
-  sections.push(new Paragraph({ text: '' }));
 
   // Recommendations
   const checkedRecommendations = Object.entries(data.recommendations).filter(([, value]) => value.checked);
@@ -407,7 +544,6 @@ export async function generateDocx(data) {
       );
     });
 
-    // Method of Follow-Up
     if (hasContent(data.methodOfFollowUp)) {
       sections.push(
         new Paragraph({ text: '' }),
@@ -558,7 +694,14 @@ function formatDateForFilename(dateStr) {
 export async function downloadDocx(data) {
   const doc = await generateDocx(data);
   const blob = await Packer.toBlob(doc);
-  const initials = getInitials(data.header.studentName);
+
+  const isMulti = data.sessionMode === 'multi' && data.students && data.students.length > 0;
+  let initials;
+  if (isMulti) {
+    initials = data.students.map(s => getInitials(s.name)).join('-');
+  } else {
+    initials = getInitials(data.header.studentName);
+  }
   const dateFormatted = formatDateForFilename(data.header.date);
   saveAs(blob, `Behavioral Observation Report ${initials} ${dateFormatted}.docx`);
 }

@@ -46,6 +46,34 @@ export function useLocalStorage(key, initialValue) {
   return [storedValue, setValue, { lastSaved, clearValue }];
 }
 
+// Default per-student data structure
+export function getStudentDefaults(name = '') {
+  return {
+    name,
+    behaviorCounts: {
+      taskCompletion: 0,
+      vocalLevels: 0,
+      nfd: 0,
+      elopement: 0,
+      aggression: 0,
+      propertyDestruction: 0,
+      sib: 0,
+      outOfSeat: 0,
+      outOfArea: 0
+    },
+    transitions: { successes: 0, attempts: 0 },
+    requestHelp: { successes: 0, attempts: 0 },
+    compliance: { successes: 0, attempts: 0 },
+    durationData: {
+      crisis: { totalSeconds: 0, instances: 0 },
+      onTask: { totalSeconds: 0, instances: 0 },
+      offTask: { totalSeconds: 0, instances: 0 }
+    },
+    narratives: [],
+    abcEntries: []
+  };
+}
+
 // Hook specifically for observation data with auto-save
 export function useObservationStorage() {
   const STORAGE_KEY = 'observation-data';
@@ -55,6 +83,10 @@ export function useObservationStorage() {
     createdAt: new Date().toISOString(),
     lastModified: new Date().toISOString(),
     status: 'in-progress',
+    // Session mode: 'single' or 'multi'
+    sessionMode: null,
+    // Multi-student data (array of per-student objects)
+    students: [],
     header: {
       studentName: '',
       studentId: '',
@@ -155,11 +187,37 @@ export function useObservationStorage() {
       let current = newData;
 
       for (let i = 0; i < keys.length - 1; i++) {
+        if (Array.isArray(current[keys[i]])) {
+          current[keys[i]] = [...current[keys[i]]];
+        } else {
+          current[keys[i]] = { ...current[keys[i]] };
+        }
+        current = current[keys[i]];
+      }
+
+      current[keys[keys.length - 1]] = value;
+      return newData;
+    });
+  }, [setData]);
+
+  // Update a field for a specific student (by index)
+  const updateStudentField = useCallback((studentIndex, path, value) => {
+    setData(prev => {
+      const newData = { ...prev, lastModified: new Date().toISOString() };
+      const newStudents = [...newData.students];
+      const student = { ...newStudents[studentIndex] };
+
+      const keys = path.split('.');
+      let current = student;
+
+      for (let i = 0; i < keys.length - 1; i++) {
         current[keys[i]] = { ...current[keys[i]] };
         current = current[keys[i]];
       }
 
       current[keys[keys.length - 1]] = value;
+      newStudents[studentIndex] = student;
+      newData.students = newStudents;
       return newData;
     });
   }, [setData]);
@@ -174,6 +232,7 @@ export function useObservationStorage() {
     data,
     setData,
     updateField,
+    updateStudentField,
     resetObservation,
     lastSaved
   };
