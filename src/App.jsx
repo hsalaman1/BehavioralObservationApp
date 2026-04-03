@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useObservationStorage } from './hooks/useLocalStorage';
+import { useSupabase } from './hooks/useSupabase';
 
 // Components
 import { ObservationHeader } from './components/Header/ObservationHeader';
@@ -8,6 +9,7 @@ import { QuickTallyPanel } from './components/Counters/QuickTallyPanel';
 import { TabNavigation } from './components/UI/TabNavigation';
 import { NarrativePanel } from './components/Narrative/NarrativePanel';
 import { ExportButtons } from './components/Export/ExportButtons';
+import { ReportsPanel } from './components/Reports/ReportsPanel';
 
 // Forms
 import { VisitNotesForm } from './components/Forms/VisitNotesForm';
@@ -30,45 +32,39 @@ const TABS = [
 
 function App() {
   const { data, setData, updateField, resetObservation, lastSaved } = useObservationStorage();
+  const { submitObservation, submitting, submitError, submitSuccess } = useSupabase();
   const [activeTab, setActiveTab] = useState('narrative');
   const [isObserving, setIsObserving] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
 
-  // Sync observing state
   useEffect(() => {
     setIsObserving(!!data.header.startTime && !data.header.endTime);
   }, [data.header.startTime, data.header.endTime]);
 
-  // Handle header changes
   const handleHeaderChange = useCallback((field, value) => {
     updateField('header.' + field, value);
   }, [updateField]);
 
-  // Handle duration timer changes
   const handleDurationChange = useCallback((timerName, timerData) => {
     updateField('durationData.' + timerName, timerData);
   }, [updateField]);
 
-  // Handle counter changes
   const handleCounterChange = useCallback((counterName, value) => {
     updateField('behaviorCounts.' + counterName, value);
   }, [updateField]);
 
-  // Handle transition changes
   const handleTransitionChange = useCallback((transitions) => {
     updateField('transitions', transitions);
   }, [updateField]);
 
-  // Handle request help changes
   const handleRequestHelpChange = useCallback((requestHelp) => {
     updateField('requestHelp', requestHelp);
   }, [updateField]);
 
-  // Handle compliance changes
   const handleComplianceChange = useCallback((compliance) => {
     updateField('compliance', compliance);
   }, [updateField]);
 
-  // Narrative handlers
   const handleAddNarrative = useCallback((entry) => {
     setData((prev) => ({
       ...prev,
@@ -95,7 +91,6 @@ function App() {
     }));
   }, [setData]);
 
-  // ABC handlers
   const handleAddABC = useCallback((entry) => {
     setData((prev) => ({
       ...prev,
@@ -122,14 +117,16 @@ function App() {
     }));
   }, [setData]);
 
-  // Clear all data
   const handleClear = useCallback(() => {
     if (window.confirm('Are you sure you want to clear all data? This cannot be undone.')) {
       resetObservation();
     }
   }, [resetObservation]);
 
-  // Render tab content
+  const handleSubmit = useCallback(() => {
+    submitObservation(data);
+  }, [submitObservation, data]);
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'narrative':
@@ -177,7 +174,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 pb-24">
-      {/* Header */}
       <ObservationHeader
         header={data.header}
         isObserving={isObserving}
@@ -186,7 +182,6 @@ function App() {
         onEnd={() => setIsObserving(false)}
       />
 
-      {/* Duration Timers */}
       <div className="max-w-4xl mx-auto px-4 py-3">
         <TimerPanel
           durationData={data.durationData}
@@ -194,7 +189,6 @@ function App() {
         />
       </div>
 
-      {/* Quick Tally Panel */}
       <div className="max-w-4xl mx-auto px-4 mb-3">
         <QuickTallyPanel
           counters={data.behaviorCounts}
@@ -208,7 +202,6 @@ function App() {
         />
       </div>
 
-      {/* Tab Navigation */}
       <div className="max-w-4xl mx-auto px-4 mb-3">
         <TabNavigation
           tabs={TABS}
@@ -217,10 +210,8 @@ function App() {
         />
       </div>
 
-      {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4">{renderTabContent()}</div>
 
-      {/* Auto-save indicator */}
       {lastSaved && (
         <div className="fixed bottom-20 right-4 bg-white shadow-lg rounded-lg px-3 py-2 text-xs text-gray-500 flex items-center gap-2 no-print">
           <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
@@ -234,8 +225,35 @@ function App() {
         </div>
       )}
 
-      {/* Export Buttons */}
-      <ExportButtons data={data} onClear={handleClear} />
+      {showAdmin && (
+        <div className="fixed inset-0 bg-gray-100 z-50 overflow-y-auto pb-24">
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-lg font-bold text-gray-800">Admin — Reports</h1>
+              <button
+                onClick={() => setShowAdmin(false)}
+                className="text-gray-500 hover:text-gray-800 flex items-center gap-1 text-sm"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Close
+              </button>
+            </div>
+            <ReportsPanel />
+          </div>
+        </div>
+      )}
+
+      <ExportButtons
+        data={data}
+        onClear={handleClear}
+        onSubmit={handleSubmit}
+        submitting={submitting}
+        submitSuccess={submitSuccess}
+        submitError={submitError}
+        onAdminOpen={() => setShowAdmin(true)}
+      />
     </div>
   );
 }
