@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useObservationStorage } from './hooks/useLocalStorage';
+import { useObservationStorage, useUserProfile } from './hooks/useLocalStorage';
 
 // Components
 import { ObservationHeader } from './components/Header/ObservationHeader';
@@ -19,6 +19,7 @@ import { BehaviorDataForm } from './components/Forms/BehaviorDataForm';
 import { ABCEntry } from './components/Forms/ABCEntry';
 import { RecommendationsForm } from './components/Forms/RecommendationsForm';
 import { ObservationNote } from './components/Forms/ObservationNote';
+import { UserProfileModal } from './components/UserProfileModal';
 
 const TABS = [
   { id: 'narrative', label: 'Narrative' },
@@ -30,8 +31,20 @@ const TABS = [
 
 function App() {
   const { data, setData, updateField, resetObservation, lastSaved } = useObservationStorage();
+  const { profile, saveProfile } = useUserProfile();
   const [activeTab, setActiveTab] = useState('narrative');
   const [isObserving, setIsObserving] = useState(false);
+
+  const profileFullName = profile.name
+    ? (profile.credentials ? `${profile.name}, ${profile.credentials}` : profile.name)
+    : '';
+
+  const handleProfileSave = useCallback((name, credentials) => {
+    saveProfile(name, credentials);
+    const fullName = credentials ? `${name}, ${credentials}` : name;
+    updateField('header.observer', fullName);
+    updateField('behaviorAnalyst', fullName);
+  }, [saveProfile, updateField]);
 
   // Sync observing state
   useEffect(() => {
@@ -126,8 +139,12 @@ function App() {
   const handleClear = useCallback(() => {
     if (window.confirm('Are you sure you want to clear all data? This cannot be undone.')) {
       resetObservation();
+      if (profileFullName) {
+        updateField('header.observer', profileFullName);
+        updateField('behaviorAnalyst', profileFullName);
+      }
     }
-  }, [resetObservation]);
+  }, [resetObservation, updateField, profileFullName]);
 
   // Render tab content
   const renderTabContent = () => {
@@ -177,6 +194,11 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 pb-24">
+      {/* First-launch profile setup */}
+      {!profile.name && (
+        <UserProfileModal onSave={handleProfileSave} />
+      )}
+
       {/* Header */}
       <ObservationHeader
         header={data.header}
