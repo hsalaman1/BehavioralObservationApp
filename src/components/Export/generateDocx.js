@@ -82,6 +82,7 @@ export async function generateDocx(data) {
       ['School', data.header.school],
       ['Date', data.header.date],
       ['Observer', data.header.observer],
+      data.header.observerTitle ? ['Observer Title', data.header.observerTitle] : null,
       ['Time', `${data.header.startTime} - ${data.header.endTime}`],
       ['RBT Present', data.header.rbtPresent === 'yes' ? 'Yes' : data.header.rbtPresent === 'no' ? 'No' : data.header.rbtPresent === 'na' ? 'N/A' : 'N/A'],
       data.header.rbtName ? ['RBT Name', data.header.rbtName] : null,
