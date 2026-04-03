@@ -14,6 +14,7 @@ export function generateCSV(data) {
   lines.push(`School,${escapeCSV(data.header.school)}`);
   lines.push(`Date,${data.header.date}`);
   lines.push(`Observer,${escapeCSV(data.header.observer)}`);
+  lines.push(`Observer Title,${escapeCSV(data.header.observerTitle || '')}`);
   lines.push(`Start Time,${data.header.startTime}`);
   lines.push(`End Time,${data.header.endTime}`);
   lines.push(`RBT Present,${data.header.rbtPresent}`);

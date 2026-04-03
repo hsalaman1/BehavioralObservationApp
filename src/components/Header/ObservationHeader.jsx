@@ -61,6 +61,24 @@ export function ObservationHeader({ header, isObserving, onHeaderChange, onStart
           </div>
         </div>
 
+        {/* Observer Fields */}
+        <div className="grid grid-cols-2 gap-2 text-sm mb-2">
+          <input
+            type="text"
+            placeholder="Observer Name"
+            value={header.observer}
+            onChange={(e) => handleFieldChange('observer', e.target.value)}
+            className="border rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          />
+          <input
+            type="text"
+            placeholder="Title / Credentials (e.g. MS, BCBA)"
+            value={header.observerTitle || ''}
+            onChange={(e) => handleFieldChange('observerTitle', e.target.value)}
+            className="border rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          />
+        </div>
+
         {/* Quick Header Fields */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
           <input
