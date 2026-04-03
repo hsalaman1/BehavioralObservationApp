@@ -60,7 +60,7 @@ export function useObservationStorage() {
       studentId: '',
       school: '',
       date: new Date().toISOString().split('T')[0],
-      observer: 'Harry Salaman-Bird, MS, BCBA',
+      observer: '',
       startTime: '',
       endTime: '',
       rbtPresent: '',
@@ -142,7 +142,7 @@ export function useObservationStorage() {
     nextSteps: [],
     methodOfFollowUp: '',
     additionalDocuments: '',
-    behaviorAnalyst: 'Harry Salaman-Bird, MS, BCBA'
+    behaviorAnalyst: ''
   });
 
   const [data, setData, { lastSaved, clearValue }] = useLocalStorage(STORAGE_KEY, getInitialState());
@@ -177,4 +177,17 @@ export function useObservationStorage() {
     resetObservation,
     lastSaved
   };
+}
+
+// Hook for persisting user profile (name + credentials) across observations
+export function useUserProfile() {
+  const PROFILE_KEY = 'user-profile';
+  const defaultProfile = { name: '', credentials: '' };
+  const [profile, setProfile] = useLocalStorage(PROFILE_KEY, defaultProfile);
+
+  const saveProfile = useCallback((name, credentials) => {
+    setProfile({ name, credentials });
+  }, [setProfile]);
+
+  return { profile, saveProfile };
 }
