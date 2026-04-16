@@ -63,7 +63,7 @@ function formatStudentTasks(tasks, otherText) {
   }).join(', ');
 }
 
-// Centered title with a bottom border rule — replaces HEADING_1
+// Centered title with a bottom border rule
 function createDocTitle(text) {
   return new Paragraph({
     children: [new TextRun({ text, font: FONT, size: TITLE_SIZE, color: BLACK })],
@@ -75,7 +75,7 @@ function createDocTitle(text) {
   });
 }
 
-// Left-aligned section heading with a bottom border rule — replaces HEADING_2
+// Left-aligned section heading with a bottom border rule
 function createSectionHeading(text) {
   return new Paragraph({
     children: [new TextRun({ text, font: FONT, size: HEADING_SIZE, color: BLACK })],
@@ -96,6 +96,10 @@ export async function generateDocx(data) {
   );
 
   // Session Information
+  const observerDisplay = data.header.observerTitle
+    ? `${data.header.observer}, ${data.header.observerTitle}`
+    : data.header.observer;
+
   sections.push(
     createSectionHeading('Session Information'),
     createInfoTable([
@@ -103,12 +107,9 @@ export async function generateDocx(data) {
       ['Student ID', data.header.studentId || 'N/A'],
       ['School', data.header.school],
       ['Date', data.header.date],
-      ['Observer', data.header.observer],
-      data.header.observerTitle ? ['Observer Title', data.header.observerTitle] : null,
+      ['Observer', observerDisplay],
       ['Time', `${data.header.startTime} - ${data.header.endTime}`],
-      ['RBT Present', data.header.rbtPresent === 'yes' ? 'Yes' : data.header.rbtPresent === 'no' ? 'No' : data.header.rbtPresent === 'na' ? 'N/A' : 'N/A'],
-      data.header.rbtName ? ['RBT Name', data.header.rbtName] : null,
-    ].filter(Boolean)),
+    ]),
     new Paragraph({ text: '' })
   );
 
