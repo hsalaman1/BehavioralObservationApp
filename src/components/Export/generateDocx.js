@@ -1,4 +1,4 @@
-import { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, HeadingLevel, WidthType, BorderStyle, AlignmentType } from 'docx';
+import { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, WidthType, BorderStyle, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import { formatTotalDuration } from '../../hooks/useTimestamp';
 
@@ -27,6 +27,12 @@ const SUPPORTS_LABELS = {
   breakArea: 'Break Area',
   other: 'Other'
 };
+
+const FONT = 'Times New Roman';
+const BLACK = '000000';
+const BODY_SIZE = 22; // 11pt
+const HEADING_SIZE = 28; // 14pt
+const TITLE_SIZE = 32; // 16pt
 
 // Helper to format boolean values
 function formatYesNo(value) {
@@ -57,25 +63,41 @@ function formatStudentTasks(tasks, otherText) {
   }).join(', ');
 }
 
+// Centered title with a bottom border rule — replaces HEADING_1
+function createDocTitle(text) {
+  return new Paragraph({
+    children: [new TextRun({ text, font: FONT, size: TITLE_SIZE, color: BLACK })],
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 160 },
+    border: {
+      bottom: { color: BLACK, space: 1, style: BorderStyle.SINGLE, size: 6 }
+    }
+  });
+}
+
+// Left-aligned section heading with a bottom border rule — replaces HEADING_2
+function createSectionHeading(text) {
+  return new Paragraph({
+    children: [new TextRun({ text, font: FONT, size: HEADING_SIZE, color: BLACK })],
+    spacing: { before: 240, after: 120 },
+    border: {
+      bottom: { color: BLACK, space: 1, style: BorderStyle.SINGLE, size: 6 }
+    }
+  });
+}
+
 export async function generateDocx(data) {
   const sections = [];
 
   // Title
   sections.push(
-    new Paragraph({
-      text: 'Behavioral Observation Report',
-      heading: HeadingLevel.HEADING_1,
-      alignment: AlignmentType.CENTER,
-    }),
+    createDocTitle('Behavioral Observation Report'),
     new Paragraph({ text: '' })
   );
 
   // Session Information
   sections.push(
-    new Paragraph({
-      text: 'Session Information',
-      heading: HeadingLevel.HEADING_2,
-    }),
+    createSectionHeading('Session Information'),
     createInfoTable([
       ['Student Name', data.header.studentName],
       ['Student ID', data.header.studentId || 'N/A'],
@@ -90,60 +112,59 @@ export async function generateDocx(data) {
     new Paragraph({ text: '' })
   );
 
-  // Setting / Activity (combined with activity data)
+  // Setting / Activity
   const studentTasks = data.studentTasks || [];
 
   sections.push(
+    createSectionHeading('Setting / Activity'),
     new Paragraph({
-      text: 'Setting / Activity',
-      heading: HeadingLevel.HEADING_2,
+      children: [new TextRun({ text: `Location: ${formatArrayAsLabels(data.location) || 'N/A'}`, font: FONT, size: BODY_SIZE, color: BLACK })]
     }),
-    new Paragraph({ text: `Location: ${formatArrayAsLabels(data.location) || 'N/A'}` }),
-    new Paragraph({ text: `Activity: ${formatArrayAsLabels(data.activity) || 'N/A'}` })
+    new Paragraph({
+      children: [new TextRun({ text: `Activity: ${formatArrayAsLabels(data.activity) || 'N/A'}`, font: FONT, size: BODY_SIZE, color: BLACK })]
+    })
   );
 
-  // Add student task and engagement if present
   if (studentTasks.length > 0) {
     sections.push(
-      new Paragraph({ text: `Student Task: ${formatStudentTasks(studentTasks, data.studentTaskOther)}` })
+      new Paragraph({
+        children: [new TextRun({ text: `Student Task: ${formatStudentTasks(studentTasks, data.studentTaskOther)}`, font: FONT, size: BODY_SIZE, color: BLACK })]
+      })
     );
   }
   if (data.studentEngagement) {
     sections.push(
-      new Paragraph({ text: `Student Engagement: ${ENGAGEMENT_LABELS[data.studentEngagement] || data.studentEngagement}` })
+      new Paragraph({
+        children: [new TextRun({ text: `Student Engagement: ${ENGAGEMENT_LABELS[data.studentEngagement] || data.studentEngagement}`, font: FONT, size: BODY_SIZE, color: BLACK })]
+      })
     );
   }
   if (hasContent(data.interventionNotes)) {
     sections.push(
       new Paragraph({
         children: [
-          new TextRun({ text: 'Activity Notes: ', bold: true }),
-          new TextRun({ text: data.interventionNotes })
+          new TextRun({ text: 'Activity Notes: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
+          new TextRun({ text: data.interventionNotes, font: FONT, size: BODY_SIZE, color: BLACK })
         ]
       })
     );
   }
   sections.push(new Paragraph({ text: '' }));
 
-  // Observation Note (combines general note and narrative log)
+  // Observation Note
   const hasObservationNote = hasContent(data.observationNote) || data.narratives.length > 0;
   if (hasObservationNote) {
-    sections.push(
-      new Paragraph({
-        text: 'Observation Note',
-        heading: HeadingLevel.HEADING_2,
-      })
-    );
+    sections.push(createSectionHeading('Observation Note'));
 
-    // General observation note (paragraph)
     if (hasContent(data.observationNote)) {
       sections.push(
-        new Paragraph({ text: data.observationNote }),
+        new Paragraph({
+          children: [new TextRun({ text: data.observationNote, font: FONT, size: BODY_SIZE, color: BLACK })]
+        }),
         new Paragraph({ text: '' })
       );
     }
 
-    // Timestamped narrative log (table)
     if (data.narratives.length > 0) {
       sections.push(
         createDataTable(
@@ -162,12 +183,7 @@ export async function generateDocx(data) {
     hasContent(data.dataCollectionNotes);
 
   if (hasDataCollectionContent) {
-    sections.push(
-      new Paragraph({
-        text: 'Data Collection Status',
-        heading: HeadingLevel.HEADING_2,
-      })
-    );
+    sections.push(createSectionHeading('Data Collection Status'));
 
     const dataCollectionRows = [];
     if (data.dataCollection.dataCurrent !== null) {
@@ -186,8 +202,8 @@ export async function generateDocx(data) {
         new Paragraph({ text: '' }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Notes: ', bold: true }),
-            new TextRun({ text: data.dataCollectionNotes })
+            new TextRun({ text: 'Notes: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
+            new TextRun({ text: data.dataCollectionNotes, font: FONT, size: BODY_SIZE, color: BLACK })
           ]
         })
       );
@@ -198,15 +214,9 @@ export async function generateDocx(data) {
   // Supports Present in Setting
   const hasSupportsContent = data.supports.length > 0 || hasContent(data.supportsNotes);
   if (hasSupportsContent) {
-    sections.push(
-      new Paragraph({
-        text: 'Supports Present in Setting',
-        heading: HeadingLevel.HEADING_2,
-      })
-    );
+    sections.push(createSectionHeading('Supports Present in Setting'));
 
     if (data.supports.length > 0) {
-      // Create a table showing each support item with checkmark
       const supportsTableRows = [];
       Object.entries(SUPPORTS_LABELS).forEach(([key, label]) => {
         const isChecked = data.supports.includes(key);
@@ -214,7 +224,7 @@ export async function generateDocx(data) {
         if (key === 'other' && isChecked && data.supportsOther) {
           displayLabel = `Other: ${data.supportsOther}`;
         }
-        supportsTableRows.push([displayLabel, isChecked ? '✓' : '']);
+        supportsTableRows.push([displayLabel, isChecked ? '\u2713' : '']);
       });
       sections.push(createChecklistTable(supportsTableRows));
     }
@@ -224,8 +234,8 @@ export async function generateDocx(data) {
         new Paragraph({ text: '' }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Notes: ', bold: true }),
-            new TextRun({ text: data.supportsNotes })
+            new TextRun({ text: 'Notes: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
+            new TextRun({ text: data.supportsNotes, font: FONT, size: BODY_SIZE, color: BLACK })
           ]
         })
       );
@@ -239,24 +249,18 @@ export async function generateDocx(data) {
     hasContent(data.bipNotes);
 
   if (hasBIPContent) {
-    sections.push(
-      new Paragraph({
-        text: 'Implementation of the BIP',
-        heading: HeadingLevel.HEADING_2,
-      })
-    );
+    sections.push(createSectionHeading('Implementation of the BIP'));
 
     if (data.bip.hasBIP !== null) {
       sections.push(
         new Paragraph({
           children: [
-            new TextRun({ text: 'Student has a BIP: ', bold: true }),
-            new TextRun({ text: formatYesNo(data.bip.hasBIP) })
+            new TextRun({ text: 'Student has a BIP: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
+            new TextRun({ text: formatYesNo(data.bip.hasBIP), font: FONT, size: BODY_SIZE, color: BLACK })
           ]
         })
       );
 
-      // If student has BIP, show the implementation details
       if (data.bip.hasBIP === true) {
         sections.push(new Paragraph({ text: '' }));
         const bipRows = [
@@ -274,8 +278,8 @@ export async function generateDocx(data) {
         new Paragraph({ text: '' }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Notes: ', bold: true }),
-            new TextRun({ text: data.bipNotes })
+            new TextRun({ text: 'Notes: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
+            new TextRun({ text: data.bipNotes, font: FONT, size: BODY_SIZE, color: BLACK })
           ]
         })
       );
@@ -285,10 +289,7 @@ export async function generateDocx(data) {
 
   // Duration Data
   sections.push(
-    new Paragraph({
-      text: 'Duration Data',
-      heading: HeadingLevel.HEADING_2,
-    }),
+    createSectionHeading('Duration Data'),
     createDataTable(
       ['Behavior', 'Total Duration', 'Instances'],
       [
@@ -305,10 +306,7 @@ export async function generateDocx(data) {
   const compliance = data.compliance || { successes: 0, attempts: 0 };
 
   sections.push(
-    new Paragraph({
-      text: 'Frequency Data',
-      heading: HeadingLevel.HEADING_2,
-    }),
+    createSectionHeading('Frequency Data'),
     createDataTable(
       ['Behavior', 'Count'],
       [
@@ -346,12 +344,7 @@ export async function generateDocx(data) {
   );
 
   // ABC Data
-  sections.push(
-    new Paragraph({
-      text: 'ABC Data',
-      heading: HeadingLevel.HEADING_2,
-    })
-  );
+  sections.push(createSectionHeading('ABC Data'));
   if (data.abcEntries.length > 0) {
     sections.push(
       createDataTable(
@@ -360,26 +353,25 @@ export async function generateDocx(data) {
       )
     );
   } else {
-    sections.push(new Paragraph({ text: 'No ABC entries recorded.' }));
+    sections.push(
+      new Paragraph({
+        children: [new TextRun({ text: 'No ABC entries recorded.', font: FONT, size: BODY_SIZE, color: BLACK })]
+      })
+    );
   }
   sections.push(new Paragraph({ text: '' }));
 
   // Recommendations
   const checkedRecommendations = Object.entries(data.recommendations).filter(([, value]) => value.checked);
   if (checkedRecommendations.length > 0) {
-    sections.push(
-      new Paragraph({
-        text: 'Recommendations',
-        heading: HeadingLevel.HEADING_2,
-      })
-    );
+    sections.push(createSectionHeading('Recommendations'));
     checkedRecommendations.forEach(([key, value]) => {
       sections.push(
         new Paragraph({
           children: [
-            new TextRun({ text: '• ', bold: true }),
-            new TextRun({ text: formatCamelCase(key) }),
-            value.note ? new TextRun({ text: `: ${value.note}` }) : null,
+            new TextRun({ text: '\u2022 ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
+            new TextRun({ text: formatCamelCase(key), font: FONT, size: BODY_SIZE, color: BLACK }),
+            value.note ? new TextRun({ text: `: ${value.note}`, font: FONT, size: BODY_SIZE, color: BLACK }) : null,
           ].filter(Boolean),
         })
       );
@@ -390,32 +382,26 @@ export async function generateDocx(data) {
   // Next Steps
   const hasNextSteps = data.nextSteps.length > 0 || hasContent(data.methodOfFollowUp);
   if (hasNextSteps) {
-    sections.push(
-      new Paragraph({
-        text: 'Next Steps',
-        heading: HeadingLevel.HEADING_2,
-      })
-    );
+    sections.push(createSectionHeading('Next Steps'));
 
     data.nextSteps.forEach((step) => {
       sections.push(
         new Paragraph({
           children: [
-            new TextRun({ text: '• ' }),
-            new TextRun({ text: formatCamelCase(step) }),
+            new TextRun({ text: '\u2022 ', font: FONT, size: BODY_SIZE, color: BLACK }),
+            new TextRun({ text: formatCamelCase(step), font: FONT, size: BODY_SIZE, color: BLACK }),
           ],
         })
       );
     });
 
-    // Method of Follow-Up
     if (hasContent(data.methodOfFollowUp)) {
       sections.push(
         new Paragraph({ text: '' }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Method of Follow-Up: ', bold: true }),
-            new TextRun({ text: data.methodOfFollowUp })
+            new TextRun({ text: 'Method of Follow-Up: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
+            new TextRun({ text: data.methodOfFollowUp, font: FONT, size: BODY_SIZE, color: BLACK })
           ]
         })
       );
@@ -424,14 +410,14 @@ export async function generateDocx(data) {
     sections.push(new Paragraph({ text: '' }));
   }
 
-  // Signature
-  sections.push(
-    new Paragraph({
-      text: `Behavior Analyst: ${data.behaviorAnalyst}`,
-    })
-  );
-
   const doc = new Document({
+    styles: {
+      default: {
+        document: {
+          run: { font: FONT, size: BODY_SIZE, color: BLACK }
+        }
+      }
+    },
     sections: [
       {
         properties: {},
@@ -451,11 +437,11 @@ function createInfoTable(rows) {
         new TableRow({
           children: [
             new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: label, bold: true })] })],
+              children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, font: FONT, size: BODY_SIZE, color: BLACK })] })],
               width: { size: 30, type: WidthType.PERCENTAGE },
             }),
             new TableCell({
-              children: [new Paragraph({ text: value || '' })],
+              children: [new Paragraph({ children: [new TextRun({ text: value || '', font: FONT, size: BODY_SIZE, color: BLACK })] })],
               width: { size: 70, type: WidthType.PERCENTAGE },
             }),
           ],
@@ -471,12 +457,12 @@ function createChecklistTable(rows) {
       new TableRow({
         children: [
           new TableCell({
-            children: [new Paragraph({ children: [new TextRun({ text: 'Support', bold: true })] })],
+            children: [new Paragraph({ children: [new TextRun({ text: 'Support', bold: true, font: FONT, size: BODY_SIZE, color: BLACK })] })],
             shading: { fill: 'E0E0E0' },
             width: { size: 80, type: WidthType.PERCENTAGE },
           }),
           new TableCell({
-            children: [new Paragraph({ children: [new TextRun({ text: 'Present', bold: true })] })],
+            children: [new Paragraph({ children: [new TextRun({ text: 'Present', bold: true, font: FONT, size: BODY_SIZE, color: BLACK })] })],
             shading: { fill: 'E0E0E0' },
             width: { size: 20, type: WidthType.PERCENTAGE },
           }),
@@ -487,10 +473,10 @@ function createChecklistTable(rows) {
           new TableRow({
             children: [
               new TableCell({
-                children: [new Paragraph({ text: label })],
+                children: [new Paragraph({ children: [new TextRun({ text: label, font: FONT, size: BODY_SIZE, color: BLACK })] })],
               }),
               new TableCell({
-                children: [new Paragraph({ text: checked, alignment: AlignmentType.CENTER })],
+                children: [new Paragraph({ children: [new TextRun({ text: checked, font: FONT, size: BODY_SIZE, color: BLACK })], alignment: AlignmentType.CENTER })],
               }),
             ],
           })
@@ -507,7 +493,7 @@ function createDataTable(headers, rows) {
         children: headers.map(
           (header) =>
             new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: header, bold: true })] })],
+              children: [new Paragraph({ children: [new TextRun({ text: header, bold: true, font: FONT, size: BODY_SIZE, color: BLACK })] })],
               shading: { fill: 'E0E0E0' },
             })
         ),
@@ -518,7 +504,7 @@ function createDataTable(headers, rows) {
             children: row.map(
               (cell) =>
                 new TableCell({
-                  children: [new Paragraph({ text: cell || '' })],
+                  children: [new Paragraph({ children: [new TextRun({ text: cell || '', font: FONT, size: BODY_SIZE, color: BLACK })] })],
                 })
             ),
           })
