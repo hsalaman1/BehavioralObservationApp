@@ -3,6 +3,7 @@ import { useSupabase } from '../../hooks/useSupabase';
 import { AdminLogin } from '../Admin/AdminLogin';
 import { downloadDocx } from '../Export/generateDocx';
 import { downloadCSV } from '../Export/generateCSV';
+import { downloadPdf } from '../Export/generatePdf';
 
 function formatDate(isoString) {
   if (!isoString) return '—';
@@ -61,6 +62,15 @@ export function ReportsPanel() {
     }
   };
 
+  const handleDownloadPdf = async (report) => {
+    setDownloadingId(report.id + '-pdf');
+    try {
+      await downloadPdf(report.data);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this report from the database? This cannot be undone.')) return;
     setDeletingId(id);
@@ -80,7 +90,6 @@ export function ReportsPanel() {
 
   return (
     <div className="space-y-4">
-      {/* Header bar */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center justify-between">
         <div>
           <h2 className="text-base font-semibold text-gray-800">Submitted Reports</h2>
@@ -112,7 +121,7 @@ export function ReportsPanel() {
 
       {!loading && reports.length === 0 && !error && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-10 text-center text-sm text-gray-400">
-          No reports submitted yet. Once an observer taps "Submit", their report will appear here.
+          No reports submitted yet. Once an observer taps “Submit”, their report will appear here.
         </div>
       )}
 
@@ -148,6 +157,13 @@ export function ReportsPanel() {
                 className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
               >
                 {downloadingId === report.id + '-docx' ? '…' : 'Word'}
+              </button>
+              <button
+                onClick={() => handleDownloadPdf(report)}
+                disabled={!!downloadingId}
+                className="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+              >
+                {downloadingId === report.id + '-pdf' ? '…' : 'PDF'}
               </button>
               <button
                 onClick={() => handleDelete(report.id)}
