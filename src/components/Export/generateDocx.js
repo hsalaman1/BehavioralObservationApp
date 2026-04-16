@@ -1,8 +1,23 @@
-import { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, WidthType, BorderStyle, AlignmentType } from 'docx';
+import {
+  Document, Packer, Paragraph, Table, TableRow, TableCell,
+  TextRun, WidthType, BorderStyle, AlignmentType, ShadingType,
+  Header, Footer, PageNumber, TabStopType
+} from 'docx';
 import { saveAs } from 'file-saver';
 import { formatTotalDuration } from '../../hooks/useTimestamp';
 
-// Label mappings for student task
+const FONT = 'Arial';
+const BLUE = '2B579A';
+const HEADER_BG = 'E8EEF4';
+const ZEBRA = 'F5F5F5';
+const BORDER_COLOR = 'D0D0D0';
+const TEXT = '333333';
+const MUTED = '666666';
+const WHITE = 'FFFFFF';
+const BODY_SIZE = 20;
+const SMALL_SIZE = 18;
+const TITLE_SIZE = 32;
+
 const STUDENT_TASK_LABELS = {
   wholeGroup: 'Whole Group Instruction',
   smallGroup: 'Small Group Instruction',
@@ -10,13 +25,11 @@ const STUDENT_TASK_LABELS = {
   other: 'Other'
 };
 
-// Label mappings for student engagement
 const ENGAGEMENT_LABELS = {
   engaged: 'Engaged with appropriate activity',
   notEngaged: 'Not engaged with appropriate activity'
 };
 
-// Label mappings for supports
 const SUPPORTS_LABELS = {
   tokenBoard: 'Token Board',
   firstThen: 'First/Then Board',
@@ -28,525 +41,440 @@ const SUPPORTS_LABELS = {
   other: 'Other'
 };
 
-const FONT = 'Times New Roman';
-const BLACK = '000000';
-const BODY_SIZE = 22; // 11pt
-const HEADING_SIZE = 28; // 14pt
-const TITLE_SIZE = 32; // 16pt
+function formatTime(t) {
+  if (!t) return '';
+  const m = t.match(/^(\d{1,2}:\d{2})(?::\d{2})?\s*(AM|PM)$/i);
+  if (m) return `${m[1]} ${m[2].toUpperCase()}`;
+  return t;
+}
 
-// Helper to format boolean values
+function formatDateLong(d) {
+  if (!d) return '';
+  const months = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+  const parts = d.split('-');
+  if (parts.length !== 3) return d;
+  const [y, mo, da] = parts;
+  return `${months[parseInt(mo, 10) - 1]} ${parseInt(da, 10)}, ${y}`;
+}
+
+function fmtObserver(name, title) {
+  if (!name) return '';
+  return title ? `${name}, ${title}` : name;
+}
+
 function formatYesNo(value) {
   if (value === true) return 'Yes';
   if (value === false) return 'No';
   return 'N/A';
 }
 
-// Helper to check if a section has content
 function hasContent(value) {
   if (value === null || value === undefined) return false;
   if (typeof value === 'string') return value.trim().length > 0;
   if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === 'object') {
-    return Object.values(value).some(v => hasContent(v));
-  }
+  if (typeof value === 'object') return Object.values(value).some(v => hasContent(v));
   return true;
 }
 
-// Helper to format student tasks array
 function formatStudentTasks(tasks, otherText) {
   if (!tasks || tasks.length === 0) return '';
   return tasks.map(task => {
-    if (task === 'other' && otherText) {
-      return `Other: ${otherText}`;
-    }
+    if (task === 'other' && otherText) return `Other: ${otherText}`;
     return STUDENT_TASK_LABELS[task] || task;
   }).join(', ');
 }
 
-// Centered title with a bottom border rule
-function createDocTitle(text) {
-  return new Paragraph({
-    children: [new TextRun({ text, font: FONT, size: TITLE_SIZE, color: BLACK })],
-    alignment: AlignmentType.CENTER,
-    spacing: { after: 160 },
-    border: {
-      bottom: { color: BLACK, space: 1, style: BorderStyle.SINGLE, size: 6 }
-    }
-  });
-}
-
-// Left-aligned section heading with a bottom border rule
-function createSectionHeading(text) {
-  return new Paragraph({
-    children: [new TextRun({ text, font: FONT, size: HEADING_SIZE, color: BLACK })],
-    spacing: { before: 240, after: 120 },
-    border: {
-      bottom: { color: BLACK, space: 1, style: BorderStyle.SINGLE, size: 6 }
-    }
-  });
-}
-
-export async function generateDocx(data) {
-  const sections = [];
-
-  // Title
-  sections.push(
-    createDocTitle('Behavioral Observation Report'),
-    new Paragraph({ text: '' })
-  );
-
-  // Session Information
-  const observerDisplay = data.header.observerTitle
-    ? `${data.header.observer}, ${data.header.observerTitle}`
-    : data.header.observer;
-
-  sections.push(
-    createSectionHeading('Session Information'),
-    createInfoTable([
-      ['Student Name', data.header.studentName],
-      ['Student ID', data.header.studentId || 'N/A'],
-      ['School', data.header.school],
-      ['Date', data.header.date],
-      ['Observer', observerDisplay],
-      ['Time', `${data.header.startTime} - ${data.header.endTime}`],
-    ]),
-    new Paragraph({ text: '' })
-  );
-
-  // Setting / Activity
-  const studentTasks = data.studentTasks || [];
-
-  sections.push(
-    createSectionHeading('Setting / Activity'),
-    new Paragraph({
-      children: [new TextRun({ text: `Location: ${formatArrayAsLabels(data.location) || 'N/A'}`, font: FONT, size: BODY_SIZE, color: BLACK })]
-    }),
-    new Paragraph({
-      children: [new TextRun({ text: `Activity: ${formatArrayAsLabels(data.activity) || 'N/A'}`, font: FONT, size: BODY_SIZE, color: BLACK })]
-    })
-  );
-
-  if (studentTasks.length > 0) {
-    sections.push(
-      new Paragraph({
-        children: [new TextRun({ text: `Student Task: ${formatStudentTasks(studentTasks, data.studentTaskOther)}`, font: FONT, size: BODY_SIZE, color: BLACK })]
-      })
-    );
-  }
-  if (data.studentEngagement) {
-    sections.push(
-      new Paragraph({
-        children: [new TextRun({ text: `Student Engagement: ${ENGAGEMENT_LABELS[data.studentEngagement] || data.studentEngagement}`, font: FONT, size: BODY_SIZE, color: BLACK })]
-      })
-    );
-  }
-  if (hasContent(data.interventionNotes)) {
-    sections.push(
-      new Paragraph({
-        children: [
-          new TextRun({ text: 'Activity Notes: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
-          new TextRun({ text: data.interventionNotes, font: FONT, size: BODY_SIZE, color: BLACK })
-        ]
-      })
-    );
-  }
-  sections.push(new Paragraph({ text: '' }));
-
-  // Observation Note
-  const hasObservationNote = hasContent(data.observationNote) || data.narratives.length > 0;
-  if (hasObservationNote) {
-    sections.push(createSectionHeading('Observation Note'));
-
-    if (hasContent(data.observationNote)) {
-      sections.push(
-        new Paragraph({
-          children: [new TextRun({ text: data.observationNote, font: FONT, size: BODY_SIZE, color: BLACK })]
-        }),
-        new Paragraph({ text: '' })
-      );
-    }
-
-    if (data.narratives.length > 0) {
-      sections.push(
-        createDataTable(
-          ['Time', 'Narrative'],
-          data.narratives.map((n) => [n.time, n.text])
-        )
-      );
-    }
-    sections.push(new Paragraph({ text: '' }));
-  }
-
-  // Data Collection Status
-  const hasDataCollectionContent =
-    data.dataCollection.dataCurrent !== null ||
-    data.dataCollection.pastFormsAvailable !== null ||
-    hasContent(data.dataCollectionNotes);
-
-  if (hasDataCollectionContent) {
-    sections.push(createSectionHeading('Data Collection Status'));
-
-    const dataCollectionRows = [];
-    if (data.dataCollection.dataCurrent !== null) {
-      dataCollectionRows.push(['Data is current', formatYesNo(data.dataCollection.dataCurrent)]);
-    }
-    if (data.dataCollection.pastFormsAvailable !== null) {
-      dataCollectionRows.push(['Past data forms are available', formatYesNo(data.dataCollection.pastFormsAvailable)]);
-    }
-
-    if (dataCollectionRows.length > 0) {
-      sections.push(createInfoTable(dataCollectionRows));
-    }
-
-    if (hasContent(data.dataCollectionNotes)) {
-      sections.push(
-        new Paragraph({ text: '' }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: 'Notes: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
-            new TextRun({ text: data.dataCollectionNotes, font: FONT, size: BODY_SIZE, color: BLACK })
-          ]
-        })
-      );
-    }
-    sections.push(new Paragraph({ text: '' }));
-  }
-
-  // Supports Present in Setting
-  const hasSupportsContent = data.supports.length > 0 || hasContent(data.supportsNotes);
-  if (hasSupportsContent) {
-    sections.push(createSectionHeading('Supports Present in Setting'));
-
-    if (data.supports.length > 0) {
-      const supportsTableRows = [];
-      Object.entries(SUPPORTS_LABELS).forEach(([key, label]) => {
-        const isChecked = data.supports.includes(key);
-        let displayLabel = label;
-        if (key === 'other' && isChecked && data.supportsOther) {
-          displayLabel = `Other: ${data.supportsOther}`;
-        }
-        supportsTableRows.push([displayLabel, isChecked ? '\u2713' : '']);
-      });
-      sections.push(createChecklistTable(supportsTableRows));
-    }
-
-    if (hasContent(data.supportsNotes)) {
-      sections.push(
-        new Paragraph({ text: '' }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: 'Notes: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
-            new TextRun({ text: data.supportsNotes, font: FONT, size: BODY_SIZE, color: BLACK })
-          ]
-        })
-      );
-    }
-    sections.push(new Paragraph({ text: '' }));
-  }
-
-  // Implementation of the BIP
-  const hasBIPContent =
-    data.bip.hasBIP !== null ||
-    hasContent(data.bipNotes);
-
-  if (hasBIPContent) {
-    sections.push(createSectionHeading('Implementation of the BIP'));
-
-    if (data.bip.hasBIP !== null) {
-      sections.push(
-        new Paragraph({
-          children: [
-            new TextRun({ text: 'Student has a BIP: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
-            new TextRun({ text: formatYesNo(data.bip.hasBIP), font: FONT, size: BODY_SIZE, color: BLACK })
-          ]
-        })
-      );
-
-      if (data.bip.hasBIP === true) {
-        sections.push(new Paragraph({ text: '' }));
-        const bipRows = [
-          ['Teaching/practice of replacement behaviors', formatYesNo(data.bip.teachingReplacement)],
-          ['Reinforcement of replacement behaviors', formatYesNo(data.bip.reinforcementReplacement)],
-          ['Reinforcement delivered as outlined in the BIP', formatYesNo(data.bip.reinforcementAsOutlined)],
-          ['Prompting of replacement behaviors', formatYesNo(data.bip.promptingReplacement)],
-        ];
-        sections.push(createInfoTable(bipRows));
-      }
-    }
-
-    if (hasContent(data.bipNotes)) {
-      sections.push(
-        new Paragraph({ text: '' }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: 'Notes: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
-            new TextRun({ text: data.bipNotes, font: FONT, size: BODY_SIZE, color: BLACK })
-          ]
-        })
-      );
-    }
-    sections.push(new Paragraph({ text: '' }));
-  }
-
-  // Duration Data
-  sections.push(
-    createSectionHeading('Duration Data'),
-    createDataTable(
-      ['Behavior', 'Total Duration', 'Instances'],
-      [
-        ['Crisis', formatTotalDuration(data.durationData.crisis.totalSeconds), String(data.durationData.crisis.instances)],
-        ['On Task', formatTotalDuration(data.durationData.onTask.totalSeconds), String(data.durationData.onTask.instances)],
-        ['Off Task', formatTotalDuration(data.durationData.offTask.totalSeconds), String(data.durationData.offTask.instances)],
-      ]
-    ),
-    new Paragraph({ text: '' })
-  );
-
-  // Frequency Data
-  const requestHelp = data.requestHelp || { successes: 0, attempts: 0 };
-  const compliance = data.compliance || { successes: 0, attempts: 0 };
-
-  sections.push(
-    createSectionHeading('Frequency Data'),
-    createDataTable(
-      ['Behavior', 'Count'],
-      [
-        ...Object.entries(data.behaviorCounts).map(([key, value]) => [
-          formatCamelCase(key),
-          String(value),
-        ]),
-        [
-          'Transitions',
-          `${data.transitions.successes}/${data.transitions.attempts} (${
-            data.transitions.attempts > 0
-              ? Math.round((data.transitions.successes / data.transitions.attempts) * 100)
-              : 0
-          }%)`,
-        ],
-        [
-          'Request Help',
-          `${requestHelp.successes}/${requestHelp.attempts} (${
-            requestHelp.attempts > 0
-              ? Math.round((requestHelp.successes / requestHelp.attempts) * 100)
-              : 0
-          }%)`,
-        ],
-        [
-          'Compliance',
-          `${compliance.successes}/${compliance.attempts} (${
-            compliance.attempts > 0
-              ? Math.round((compliance.successes / compliance.attempts) * 100)
-              : 0
-          }%)`,
-        ],
-      ]
-    ),
-    new Paragraph({ text: '' })
-  );
-
-  // ABC Data
-  sections.push(createSectionHeading('ABC Data'));
-  if (data.abcEntries.length > 0) {
-    sections.push(
-      createDataTable(
-        ['Time', 'Antecedent', 'Behavior', 'Consequence'],
-        data.abcEntries.map((e) => [e.time, e.antecedent, e.behavior, e.consequence])
-      )
-    );
-  } else {
-    sections.push(
-      new Paragraph({
-        children: [new TextRun({ text: 'No ABC entries recorded.', font: FONT, size: BODY_SIZE, color: BLACK })]
-      })
-    );
-  }
-  sections.push(new Paragraph({ text: '' }));
-
-  // Recommendations
-  const checkedRecommendations = Object.entries(data.recommendations).filter(([, value]) => value.checked);
-  if (checkedRecommendations.length > 0) {
-    sections.push(createSectionHeading('Recommendations'));
-    checkedRecommendations.forEach(([key, value]) => {
-      sections.push(
-        new Paragraph({
-          children: [
-            new TextRun({ text: '\u2022 ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
-            new TextRun({ text: formatCamelCase(key), font: FONT, size: BODY_SIZE, color: BLACK }),
-            value.note ? new TextRun({ text: `: ${value.note}`, font: FONT, size: BODY_SIZE, color: BLACK }) : null,
-          ].filter(Boolean),
-        })
-      );
-    });
-    sections.push(new Paragraph({ text: '' }));
-  }
-
-  // Next Steps
-  const hasNextSteps = data.nextSteps.length > 0 || hasContent(data.methodOfFollowUp);
-  if (hasNextSteps) {
-    sections.push(createSectionHeading('Next Steps'));
-
-    data.nextSteps.forEach((step) => {
-      sections.push(
-        new Paragraph({
-          children: [
-            new TextRun({ text: '\u2022 ', font: FONT, size: BODY_SIZE, color: BLACK }),
-            new TextRun({ text: formatCamelCase(step), font: FONT, size: BODY_SIZE, color: BLACK }),
-          ],
-        })
-      );
-    });
-
-    if (hasContent(data.methodOfFollowUp)) {
-      sections.push(
-        new Paragraph({ text: '' }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: 'Method of Follow-Up: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
-            new TextRun({ text: data.methodOfFollowUp, font: FONT, size: BODY_SIZE, color: BLACK })
-          ]
-        })
-      );
-    }
-
-    sections.push(new Paragraph({ text: '' }));
-  }
-
-  const doc = new Document({
-    styles: {
-      default: {
-        document: {
-          run: { font: FONT, size: BODY_SIZE, color: BLACK }
-        }
-      }
-    },
-    sections: [
-      {
-        properties: {},
-        children: sections,
-      },
-    ],
-  });
-
-  return doc;
-}
-
-function createInfoTable(rows) {
-  return new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: rows.map(
-      ([label, value]) =>
-        new TableRow({
-          children: [
-            new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, font: FONT, size: BODY_SIZE, color: BLACK })] })],
-              width: { size: 30, type: WidthType.PERCENTAGE },
-            }),
-            new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: value || '', font: FONT, size: BODY_SIZE, color: BLACK })] })],
-              width: { size: 70, type: WidthType.PERCENTAGE },
-            }),
-          ],
-        })
-    ),
-  });
-}
-
-function createChecklistTable(rows) {
-  return new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: [
-      new TableRow({
-        children: [
-          new TableCell({
-            children: [new Paragraph({ children: [new TextRun({ text: 'Support', bold: true, font: FONT, size: BODY_SIZE, color: BLACK })] })],
-            shading: { fill: 'E0E0E0' },
-            width: { size: 80, type: WidthType.PERCENTAGE },
-          }),
-          new TableCell({
-            children: [new Paragraph({ children: [new TextRun({ text: 'Present', bold: true, font: FONT, size: BODY_SIZE, color: BLACK })] })],
-            shading: { fill: 'E0E0E0' },
-            width: { size: 20, type: WidthType.PERCENTAGE },
-          }),
-        ],
-      }),
-      ...rows.map(
-        ([label, checked]) =>
-          new TableRow({
-            children: [
-              new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: label, font: FONT, size: BODY_SIZE, color: BLACK })] })],
-              }),
-              new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: checked, font: FONT, size: BODY_SIZE, color: BLACK })], alignment: AlignmentType.CENTER })],
-              }),
-            ],
-          })
-      ),
-    ],
-  });
-}
-
-function createDataTable(headers, rows) {
-  return new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: [
-      new TableRow({
-        children: headers.map(
-          (header) =>
-            new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: header, bold: true, font: FONT, size: BODY_SIZE, color: BLACK })] })],
-              shading: { fill: 'E0E0E0' },
-            })
-        ),
-      }),
-      ...rows.map(
-        (row) =>
-          new TableRow({
-            children: row.map(
-              (cell) =>
-                new TableCell({
-                  children: [new Paragraph({ children: [new TextRun({ text: cell || '', font: FONT, size: BODY_SIZE, color: BLACK })] })],
-                })
-            ),
-          })
-      ),
-    ],
-  });
-}
-
-// Format camelCase to Title Case with spaces
 function formatCamelCase(str) {
-  return str
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, (char) => char.toUpperCase())
-    .trim();
+  return str.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim();
 }
 
-// Format array of camelCase values to readable labels
 function formatArrayAsLabels(arr) {
   if (!arr || arr.length === 0) return '';
   return arr.map(item => formatCamelCase(item)).join(', ');
 }
 
+function pct(n, d) {
+  return d > 0 ? `${n}/${d} (${Math.round((n / d) * 100)}%)` : '0/0 (0%)';
+}
+
+const BD = {
+  top:    { style: BorderStyle.SINGLE, size: 1, color: BORDER_COLOR },
+  bottom: { style: BorderStyle.SINGLE, size: 1, color: BORDER_COLOR },
+  left:   { style: BorderStyle.SINGLE, size: 1, color: BORDER_COLOR },
+  right:  { style: BorderStyle.SINGLE, size: 1, color: BORDER_COLOR },
+};
+
+const NO_BD = {
+  top:    { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+  bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+  left:   { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+  right:  { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+};
+
+function tr(text, opts = {}) {
+  return new TextRun({ text: String(text ?? ''), font: FONT, size: BODY_SIZE, color: TEXT, ...opts });
+}
+
+const sp = () => new Paragraph({ children: [], spacing: { before: 0, after: 80 } });
+
+function sectionHeader(title) {
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [new TableRow({
+      children: [new TableCell({
+        children: [new Paragraph({
+          children: [new TextRun({
+            text: title.toUpperCase(),
+            bold: true, font: FONT, size: BODY_SIZE, color: BLUE,
+          })],
+          spacing: { before: 0, after: 0 },
+        })],
+        shading: { type: ShadingType.CLEAR, color: 'auto', fill: HEADER_BG },
+        borders: BD,
+        margins: { top: 60, bottom: 60, left: 100, right: 100 },
+      })],
+    })],
+  });
+}
+
+function kvTable(rows) {
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: rows.map(([label, value]) => new TableRow({
+      children: [
+        new TableCell({
+          children: [new Paragraph({ children: [tr(label, { bold: true, color: MUTED, size: SMALL_SIZE })] })],
+          width: { size: 30, type: WidthType.PERCENTAGE },
+          shading: { type: ShadingType.CLEAR, color: 'auto', fill: HEADER_BG },
+          borders: BD,
+          margins: { top: 60, bottom: 60, left: 100, right: 100 },
+        }),
+        new TableCell({
+          children: [new Paragraph({
+            children: [tr(value || 'Not specified', !value ? { italics: true, color: MUTED } : {})],
+          })],
+          width: { size: 70, type: WidthType.PERCENTAGE },
+          borders: BD,
+          margins: { top: 60, bottom: 60, left: 100, right: 100 },
+        }),
+      ],
+    })),
+  });
+}
+
+function dataTable(headers, rows) {
+  const headerRow = new TableRow({
+    children: headers.map(h => new TableCell({
+      children: [new Paragraph({ children: [tr(h, { bold: true, size: SMALL_SIZE })] })],
+      shading: { type: ShadingType.CLEAR, color: 'auto', fill: HEADER_BG },
+      borders: BD,
+      margins: { top: 40, bottom: 40, left: 80, right: 80 },
+    })),
+  });
+
+  const dataRows = rows.map((row, i) => new TableRow({
+    children: row.map((cell, ci) => new TableCell({
+      children: [new Paragraph({
+        children: [tr(cell ?? '')],
+        alignment: ci === row.length - 1 && /^\d/.test(String(cell)) ? AlignmentType.RIGHT : AlignmentType.LEFT,
+      })],
+      shading: { type: ShadingType.CLEAR, color: 'auto', fill: i % 2 === 0 ? WHITE : ZEBRA },
+      borders: BD,
+      margins: { top: 40, bottom: 40, left: 80, right: 80 },
+    })),
+  }));
+
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [headerRow, ...dataRows],
+  });
+}
+
+function makeHeader() {
+  return new Header({
+    children: [
+      new Paragraph({
+        children: [tr('CONFIDENTIAL BEHAVIORAL DOCUMENTATION', { size: 16, color: MUTED, bold: true })],
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 40 },
+      }),
+      new Paragraph({
+        children: [tr('Behavioral Observation Report', { size: TITLE_SIZE, bold: true })],
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 0 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: BORDER_COLOR } },
+      }),
+    ],
+  });
+}
+
+function makeFooter() {
+  return new Footer({
+    children: [
+      new Paragraph({
+        children: [
+          tr('This document contains confidential student information protected under FERPA.', { size: 16, color: MUTED }),
+          new TextRun({ text: '\t', font: FONT }),
+          tr('Page ', { size: 16, color: MUTED }),
+          new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 16, color: MUTED }),
+          tr(' of ', { size: 16, color: MUTED }),
+          new TextRun({ children: [PageNumber.TOTAL_PAGES], font: FONT, size: 16, color: MUTED }),
+        ],
+        tabStops: [{ type: TabStopType.RIGHT, position: 9000 }],
+        border: { top: { style: BorderStyle.SINGLE, size: 4, color: BORDER_COLOR } },
+        spacing: { before: 80 },
+      }),
+    ],
+  });
+}
+
+export async function generateDocx(data) {
+  const children = [];
+
+  const timeRange = [formatTime(data.header.startTime), formatTime(data.header.endTime)]
+    .filter(Boolean).join(' – ');
+
+  children.push(
+    sectionHeader('Session Information'),
+    kvTable([
+      ['Student Name', data.header.studentName],
+      ['Date', formatDateLong(data.header.date)],
+      ['School', data.header.school],
+      ['Time', timeRange],
+      ['Observer', fmtObserver(data.header.observer, data.header.observerTitle)],
+      ...(data.header.studentId ? [['Student ID', data.header.studentId]] : []),
+    ]),
+    sp()
+  );
+
+  const settingRows = [];
+  if (hasContent(data.location)) settingRows.push(['Location', formatArrayAsLabels(data.location)]);
+  if (hasContent(data.activity)) settingRows.push(['Activity', formatArrayAsLabels(data.activity)]);
+  const taskStr = formatStudentTasks(data.studentTasks, data.studentTaskOther);
+  if (taskStr) settingRows.push(['Student Task', taskStr]);
+  if (data.studentEngagement) settingRows.push(['Student Engagement', ENGAGEMENT_LABELS[data.studentEngagement] || data.studentEngagement]);
+
+  if (settingRows.length > 0 || hasContent(data.interventionNotes)) {
+    children.push(sectionHeader('Setting / Activity'));
+    if (settingRows.length > 0) children.push(kvTable(settingRows));
+    if (hasContent(data.interventionNotes)) {
+      children.push(sp(), new Paragraph({ children: [tr(data.interventionNotes)] }));
+    }
+    children.push(sp());
+  }
+
+  const hasObsNote = hasContent(data.observationNote);
+  const hasNarratives = data.narratives && data.narratives.length > 0;
+
+  if (hasObsNote || hasNarratives) {
+    children.push(sectionHeader('Observation Summary'));
+    if (hasObsNote) {
+      children.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [new TableRow({
+            children: [new TableCell({
+              children: [new Paragraph({ children: [tr(data.observationNote)] })],
+              borders: BD,
+              margins: { top: 80, bottom: 80, left: 100, right: 100 },
+            })],
+          })],
+        }),
+        sp()
+      );
+    }
+    if (hasNarratives) {
+      children.push(
+        sectionHeader('Observation Narrative'),
+        dataTable(
+          ['Time', 'Narrative'],
+          data.narratives.map(n => [formatTime(n.time), n.text])
+        )
+      );
+    }
+    children.push(sp());
+  }
+
+  const hasDataCollection =
+    data.dataCollection.dataCurrent !== null ||
+    data.dataCollection.pastFormsAvailable !== null ||
+    hasContent(data.dataCollectionNotes);
+
+  if (hasDataCollection) {
+    children.push(sectionHeader('Data Collection Status'));
+    const dcRows = [];
+    if (data.dataCollection.dataCurrent !== null)
+      dcRows.push(['Data is Current', formatYesNo(data.dataCollection.dataCurrent)]);
+    if (data.dataCollection.pastFormsAvailable !== null)
+      dcRows.push(['Past Data Forms Available', formatYesNo(data.dataCollection.pastFormsAvailable)]);
+    if (dcRows.length > 0) children.push(kvTable(dcRows));
+    if (hasContent(data.dataCollectionNotes))
+      children.push(sp(), new Paragraph({ children: [tr(data.dataCollectionNotes)] }));
+    children.push(sp());
+  }
+
+  const checkedSupports = data.supports || [];
+  if (checkedSupports.length > 0 || hasContent(data.supportsNotes)) {
+    children.push(sectionHeader('Supports Present'));
+    if (checkedSupports.length > 0) {
+      const supportItems = checkedSupports.map(key => {
+        let label = SUPPORTS_LABELS[key] || formatCamelCase(key);
+        if (key === 'other' && data.supportsOther) label = `Other: ${data.supportsOther}`;
+        return label;
+      });
+      children.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [new TableRow({
+            children: [new TableCell({
+              children: [new Paragraph({ children: [tr(supportItems.join('  •  '))] })],
+              borders: BD,
+              margins: { top: 60, bottom: 60, left: 100, right: 100 },
+            })],
+          })],
+        })
+      );
+    }
+    if (hasContent(data.supportsNotes))
+      children.push(sp(), new Paragraph({ children: [tr(data.supportsNotes)] }));
+    children.push(sp());
+  }
+
+  const hasBIP = data.bip.hasBIP !== null || hasContent(data.bipNotes);
+  if (hasBIP) {
+    children.push(sectionHeader('Implementation of the BIP'));
+    const bipRows = [];
+    if (data.bip.hasBIP !== null) bipRows.push(['Student Has a BIP', formatYesNo(data.bip.hasBIP)]);
+    if (data.bip.hasBIP === true) {
+      bipRows.push(
+        ['Teaching/Practice of Replacement Behaviors', formatYesNo(data.bip.teachingReplacement)],
+        ['Reinforcement of Replacement Behaviors', formatYesNo(data.bip.reinforcementReplacement)],
+        ['Reinforcement Delivered as Outlined', formatYesNo(data.bip.reinforcementAsOutlined)],
+        ['Prompting of Replacement Behaviors', formatYesNo(data.bip.promptingReplacement)],
+      );
+    }
+    if (bipRows.length > 0) children.push(kvTable(bipRows));
+    if (hasContent(data.bipNotes))
+      children.push(sp(), new Paragraph({ children: [tr(data.bipNotes)] }));
+    children.push(sp());
+  }
+
+  children.push(
+    sectionHeader('Duration Data'),
+    dataTable(
+      ['Behavior', 'Total Duration', 'Instances'],
+      [
+        ['Crisis',   formatTotalDuration(data.durationData.crisis.totalSeconds),  String(data.durationData.crisis.instances)],
+        ['On Task',  formatTotalDuration(data.durationData.onTask.totalSeconds),  String(data.durationData.onTask.instances)],
+        ['Off Task', formatTotalDuration(data.durationData.offTask.totalSeconds), String(data.durationData.offTask.instances)],
+      ]
+    ),
+    sp()
+  );
+
+  const requestHelp = data.requestHelp || { successes: 0, attempts: 0 };
+  const compliance  = data.compliance  || { successes: 0, attempts: 0 };
+  const transitions = data.transitions || { successes: 0, attempts: 0 };
+
+  const freqRows = [
+    ...Object.entries(data.behaviorCounts)
+      .filter(([, v]) => v > 0)
+      .map(([k, v]) => [formatCamelCase(k), String(v)]),
+    ['Transitions',  pct(transitions.successes,  transitions.attempts)],
+    ['Request Help', pct(requestHelp.successes,   requestHelp.attempts)],
+    ['Compliance',   pct(compliance.successes,    compliance.attempts)],
+  ];
+
+  children.push(
+    sectionHeader('Frequency Data'),
+    dataTable(['Behavior', 'Count'], freqRows),
+    sp()
+  );
+
+  children.push(sectionHeader('ABC Data'));
+  if (data.abcEntries && data.abcEntries.length > 0) {
+    children.push(
+      dataTable(
+        ['Time', 'Antecedent', 'Behavior', 'Consequence'],
+        data.abcEntries.map(e => [formatTime(e.time), e.antecedent, e.behavior, e.consequence])
+      )
+    );
+  } else {
+    children.push(new Paragraph({ children: [tr('No ABC entries recorded.', { italics: true, color: MUTED })] }));
+  }
+  children.push(sp());
+
+  const checkedRecs = Object.entries(data.recommendations || {}).filter(([, v]) => v.checked);
+  if (checkedRecs.length > 0) {
+    children.push(sectionHeader('Recommendations'));
+    checkedRecs.forEach(([key, value]) => {
+      children.push(new Paragraph({
+        children: [
+          tr('\u2022 ', { bold: true }),
+          tr(formatCamelCase(key)),
+          ...(value.note ? [tr(`: ${value.note}`)] : []),
+        ],
+        spacing: { before: 40, after: 40 },
+      }));
+    });
+    children.push(sp());
+  }
+
+  const hasNextSteps = (data.nextSteps && data.nextSteps.length > 0) || hasContent(data.methodOfFollowUp);
+  if (hasNextSteps) {
+    children.push(sectionHeader('Next Steps'));
+    (data.nextSteps || []).forEach(step => {
+      children.push(new Paragraph({
+        children: [tr('\u2022 ', { bold: true }), tr(formatCamelCase(step))],
+        spacing: { before: 40, after: 40 },
+      }));
+    });
+    if (hasContent(data.methodOfFollowUp)) {
+      children.push(
+        sp(),
+        new Paragraph({ children: [tr('Method of Follow-Up: ', { bold: true }), tr(data.methodOfFollowUp)] })
+      );
+    }
+    children.push(sp());
+  }
+
+  const doc = new Document({
+    styles: {
+      default: {
+        document: { run: { font: FONT, size: BODY_SIZE, color: TEXT } },
+      },
+    },
+    sections: [{
+      headers: { default: makeHeader() },
+      footers: { default: makeFooter() },
+      properties: {
+        page: {
+          margin: { top: 1440, bottom: 1080, left: 1080, right: 1080 },
+        },
+      },
+      children,
+    }],
+  });
+
+  return doc;
+}
+
 function getInitials(name) {
   if (!name) return 'OBS';
-  return name
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase())
-    .join('');
+  return name.split(' ').map(w => w.charAt(0).toUpperCase()).join('');
 }
 
 function formatDateForFilename(dateStr) {
   if (!dateStr) return '';
   const [year, month, day] = dateStr.split('-');
-  const shortYear = year.slice(-2);
-  return `${parseInt(month)}.${parseInt(day)}.${shortYear}`;
+  return `${parseInt(month)}.${parseInt(day)}.${year.slice(-2)}`;
 }
 
 export async function downloadDocx(data) {
   const doc = await generateDocx(data);
   const blob = await Packer.toBlob(doc);
   const initials = getInitials(data.header.studentName);
-  const dateFormatted = formatDateForFilename(data.header.date);
-  saveAs(blob, `Behavioral Observation Report ${initials} ${dateFormatted}.docx`);
+  const dateStr = formatDateForFilename(data.header.date);
+  saveAs(blob, `Behavioral Observation Report ${initials} ${dateStr}.docx`);
 }
