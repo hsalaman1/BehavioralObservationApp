@@ -28,6 +28,12 @@ const SUPPORTS_LABELS = {
   other: 'Other'
 };
 
+const FONT = 'Times New Roman';
+const BLACK = '000000';
+const BODY_SIZE = 22; // 11pt
+const HEADING_SIZE = 28; // 14pt
+const TITLE_SIZE = 32; // 16pt
+
 // Helper to format boolean values
 function formatYesNo(value) {
   if (value === true) return 'Yes';
@@ -57,22 +63,26 @@ function formatStudentTasks(tasks, otherText) {
   }).join(', ');
 }
 
-// Creates the document title paragraph (centered, black, with bottom rule)
+// Centered title with a bottom border rule — replaces HEADING_1
 function createDocTitle(text) {
   return new Paragraph({
-    children: [new TextRun({ text, font: 'Times New Roman', size: 32, color: '000000' })],
+    children: [new TextRun({ text, font: FONT, size: TITLE_SIZE, color: BLACK })],
     alignment: AlignmentType.CENTER,
     spacing: { after: 160 },
-    border: { bottom: { color: '000000', space: 1, style: BorderStyle.SINGLE, size: 6 } }
+    border: {
+      bottom: { color: BLACK, space: 1, style: BorderStyle.SINGLE, size: 6 }
+    }
   });
 }
 
-// Creates a section heading paragraph (left-aligned, black, with bottom rule)
+// Left-aligned section heading with a bottom border rule — replaces HEADING_2
 function createSectionHeading(text) {
   return new Paragraph({
-    children: [new TextRun({ text, font: 'Times New Roman', size: 28, color: '000000' })],
+    children: [new TextRun({ text, font: FONT, size: HEADING_SIZE, color: BLACK })],
     spacing: { before: 240, after: 120 },
-    border: { bottom: { color: '000000', space: 1, style: BorderStyle.SINGLE, size: 6 } }
+    border: {
+      bottom: { color: BLACK, space: 1, style: BorderStyle.SINGLE, size: 6 }
+    }
   });
 }
 
@@ -108,24 +118,24 @@ export async function generateDocx(data) {
   sections.push(
     createSectionHeading('Setting / Activity'),
     new Paragraph({
-      children: [new TextRun({ text: `Location: ${formatArrayAsLabels(data.location) || 'N/A'}`, font: 'Times New Roman', size: 22, color: '000000' })]
+      children: [new TextRun({ text: `Location: ${formatArrayAsLabels(data.location) || 'N/A'}`, font: FONT, size: BODY_SIZE, color: BLACK })]
     }),
     new Paragraph({
-      children: [new TextRun({ text: `Activity: ${formatArrayAsLabels(data.activity) || 'N/A'}`, font: 'Times New Roman', size: 22, color: '000000' })]
+      children: [new TextRun({ text: `Activity: ${formatArrayAsLabels(data.activity) || 'N/A'}`, font: FONT, size: BODY_SIZE, color: BLACK })]
     })
   );
 
   if (studentTasks.length > 0) {
     sections.push(
       new Paragraph({
-        children: [new TextRun({ text: `Student Task: ${formatStudentTasks(studentTasks, data.studentTaskOther)}`, font: 'Times New Roman', size: 22, color: '000000' })]
+        children: [new TextRun({ text: `Student Task: ${formatStudentTasks(studentTasks, data.studentTaskOther)}`, font: FONT, size: BODY_SIZE, color: BLACK })]
       })
     );
   }
   if (data.studentEngagement) {
     sections.push(
       new Paragraph({
-        children: [new TextRun({ text: `Student Engagement: ${ENGAGEMENT_LABELS[data.studentEngagement] || data.studentEngagement}`, font: 'Times New Roman', size: 22, color: '000000' })]
+        children: [new TextRun({ text: `Student Engagement: ${ENGAGEMENT_LABELS[data.studentEngagement] || data.studentEngagement}`, font: FONT, size: BODY_SIZE, color: BLACK })]
       })
     );
   }
@@ -133,8 +143,8 @@ export async function generateDocx(data) {
     sections.push(
       new Paragraph({
         children: [
-          new TextRun({ text: 'Activity Notes: ', bold: true, font: 'Times New Roman', size: 22, color: '000000' }),
-          new TextRun({ text: data.interventionNotes, font: 'Times New Roman', size: 22, color: '000000' })
+          new TextRun({ text: 'Activity Notes: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
+          new TextRun({ text: data.interventionNotes, font: FONT, size: BODY_SIZE, color: BLACK })
         ]
       })
     );
@@ -149,7 +159,7 @@ export async function generateDocx(data) {
     if (hasContent(data.observationNote)) {
       sections.push(
         new Paragraph({
-          children: [new TextRun({ text: data.observationNote, font: 'Times New Roman', size: 22, color: '000000' })]
+          children: [new TextRun({ text: data.observationNote, font: FONT, size: BODY_SIZE, color: BLACK })]
         }),
         new Paragraph({ text: '' })
       );
@@ -192,8 +202,8 @@ export async function generateDocx(data) {
         new Paragraph({ text: '' }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Notes: ', bold: true, font: 'Times New Roman', size: 22, color: '000000' }),
-            new TextRun({ text: data.dataCollectionNotes, font: 'Times New Roman', size: 22, color: '000000' })
+            new TextRun({ text: 'Notes: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
+            new TextRun({ text: data.dataCollectionNotes, font: FONT, size: BODY_SIZE, color: BLACK })
           ]
         })
       );
@@ -224,8 +234,8 @@ export async function generateDocx(data) {
         new Paragraph({ text: '' }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Notes: ', bold: true, font: 'Times New Roman', size: 22, color: '000000' }),
-            new TextRun({ text: data.supportsNotes, font: 'Times New Roman', size: 22, color: '000000' })
+            new TextRun({ text: 'Notes: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
+            new TextRun({ text: data.supportsNotes, font: FONT, size: BODY_SIZE, color: BLACK })
           ]
         })
       );
@@ -245,8 +255,8 @@ export async function generateDocx(data) {
       sections.push(
         new Paragraph({
           children: [
-            new TextRun({ text: 'Student has a BIP: ', bold: true, font: 'Times New Roman', size: 22, color: '000000' }),
-            new TextRun({ text: formatYesNo(data.bip.hasBIP), font: 'Times New Roman', size: 22, color: '000000' })
+            new TextRun({ text: 'Student has a BIP: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
+            new TextRun({ text: formatYesNo(data.bip.hasBIP), font: FONT, size: BODY_SIZE, color: BLACK })
           ]
         })
       );
@@ -268,8 +278,8 @@ export async function generateDocx(data) {
         new Paragraph({ text: '' }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Notes: ', bold: true, font: 'Times New Roman', size: 22, color: '000000' }),
-            new TextRun({ text: data.bipNotes, font: 'Times New Roman', size: 22, color: '000000' })
+            new TextRun({ text: 'Notes: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
+            new TextRun({ text: data.bipNotes, font: FONT, size: BODY_SIZE, color: BLACK })
           ]
         })
       );
@@ -345,7 +355,7 @@ export async function generateDocx(data) {
   } else {
     sections.push(
       new Paragraph({
-        children: [new TextRun({ text: 'No ABC entries recorded.', font: 'Times New Roman', size: 22, color: '000000' })]
+        children: [new TextRun({ text: 'No ABC entries recorded.', font: FONT, size: BODY_SIZE, color: BLACK })]
       })
     );
   }
@@ -359,9 +369,9 @@ export async function generateDocx(data) {
       sections.push(
         new Paragraph({
           children: [
-            new TextRun({ text: '\u2022 ', bold: true, font: 'Times New Roman', size: 22, color: '000000' }),
-            new TextRun({ text: formatCamelCase(key), font: 'Times New Roman', size: 22, color: '000000' }),
-            value.note ? new TextRun({ text: `: ${value.note}`, font: 'Times New Roman', size: 22, color: '000000' }) : null,
+            new TextRun({ text: '\u2022 ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
+            new TextRun({ text: formatCamelCase(key), font: FONT, size: BODY_SIZE, color: BLACK }),
+            value.note ? new TextRun({ text: `: ${value.note}`, font: FONT, size: BODY_SIZE, color: BLACK }) : null,
           ].filter(Boolean),
         })
       );
@@ -378,8 +388,8 @@ export async function generateDocx(data) {
       sections.push(
         new Paragraph({
           children: [
-            new TextRun({ text: '\u2022 ', font: 'Times New Roman', size: 22, color: '000000' }),
-            new TextRun({ text: formatCamelCase(step), font: 'Times New Roman', size: 22, color: '000000' }),
+            new TextRun({ text: '\u2022 ', font: FONT, size: BODY_SIZE, color: BLACK }),
+            new TextRun({ text: formatCamelCase(step), font: FONT, size: BODY_SIZE, color: BLACK }),
           ],
         })
       );
@@ -390,8 +400,8 @@ export async function generateDocx(data) {
         new Paragraph({ text: '' }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Method of Follow-Up: ', bold: true, font: 'Times New Roman', size: 22, color: '000000' }),
-            new TextRun({ text: data.methodOfFollowUp, font: 'Times New Roman', size: 22, color: '000000' })
+            new TextRun({ text: 'Method of Follow-Up: ', bold: true, font: FONT, size: BODY_SIZE, color: BLACK }),
+            new TextRun({ text: data.methodOfFollowUp, font: FONT, size: BODY_SIZE, color: BLACK })
           ]
         })
       );
@@ -404,7 +414,7 @@ export async function generateDocx(data) {
     styles: {
       default: {
         document: {
-          run: { font: 'Times New Roman', size: 22, color: '000000' }
+          run: { font: FONT, size: BODY_SIZE, color: BLACK }
         }
       }
     },
@@ -427,11 +437,11 @@ function createInfoTable(rows) {
         new TableRow({
           children: [
             new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, font: 'Times New Roman', size: 22, color: '000000' })] })],
+              children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, font: FONT, size: BODY_SIZE, color: BLACK })] })],
               width: { size: 30, type: WidthType.PERCENTAGE },
             }),
             new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: value || '', font: 'Times New Roman', size: 22, color: '000000' })] })],
+              children: [new Paragraph({ children: [new TextRun({ text: value || '', font: FONT, size: BODY_SIZE, color: BLACK })] })],
               width: { size: 70, type: WidthType.PERCENTAGE },
             }),
           ],
@@ -447,12 +457,12 @@ function createChecklistTable(rows) {
       new TableRow({
         children: [
           new TableCell({
-            children: [new Paragraph({ children: [new TextRun({ text: 'Support', bold: true, font: 'Times New Roman', size: 22, color: '000000' })] })],
+            children: [new Paragraph({ children: [new TextRun({ text: 'Support', bold: true, font: FONT, size: BODY_SIZE, color: BLACK })] })],
             shading: { fill: 'E0E0E0' },
             width: { size: 80, type: WidthType.PERCENTAGE },
           }),
           new TableCell({
-            children: [new Paragraph({ children: [new TextRun({ text: 'Present', bold: true, font: 'Times New Roman', size: 22, color: '000000' })] })],
+            children: [new Paragraph({ children: [new TextRun({ text: 'Present', bold: true, font: FONT, size: BODY_SIZE, color: BLACK })] })],
             shading: { fill: 'E0E0E0' },
             width: { size: 20, type: WidthType.PERCENTAGE },
           }),
@@ -463,10 +473,10 @@ function createChecklistTable(rows) {
           new TableRow({
             children: [
               new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: label, font: 'Times New Roman', size: 22, color: '000000' })] })],
+                children: [new Paragraph({ children: [new TextRun({ text: label, font: FONT, size: BODY_SIZE, color: BLACK })] })],
               }),
               new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: checked, font: 'Times New Roman', size: 22, color: '000000' })], alignment: AlignmentType.CENTER })],
+                children: [new Paragraph({ children: [new TextRun({ text: checked, font: FONT, size: BODY_SIZE, color: BLACK })], alignment: AlignmentType.CENTER })],
               }),
             ],
           })
@@ -483,7 +493,7 @@ function createDataTable(headers, rows) {
         children: headers.map(
           (header) =>
             new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: header, bold: true, font: 'Times New Roman', size: 22, color: '000000' })] })],
+              children: [new Paragraph({ children: [new TextRun({ text: header, bold: true, font: FONT, size: BODY_SIZE, color: BLACK })] })],
               shading: { fill: 'E0E0E0' },
             })
         ),
@@ -494,7 +504,7 @@ function createDataTable(headers, rows) {
             children: row.map(
               (cell) =>
                 new TableCell({
-                  children: [new Paragraph({ children: [new TextRun({ text: cell || '', font: 'Times New Roman', size: 22, color: '000000' })] })],
+                  children: [new Paragraph({ children: [new TextRun({ text: cell || '', font: FONT, size: BODY_SIZE, color: BLACK })] })],
                 })
             ),
           })
