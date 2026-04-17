@@ -1,10 +1,51 @@
 import { downloadCSV } from './generateCSV';
 import { downloadDocx } from './generateDocx';
 import { downloadPdf } from './generatePdf';
+import { useConnectivity } from '../../hooks/useConnectivity';
+
+function ConnectivityDot({ isOnline, supabaseReachable, checking }) {
+  let color, label;
+  if (!isOnline) {
+    color = 'bg-red-500';
+    label = 'Offline';
+  } else if (checking || supabaseReachable === null) {
+    color = 'bg-yellow-400 animate-pulse';
+    label = 'Checking…';
+  } else if (supabaseReachable) {
+    color = 'bg-green-500';
+    label = 'Connected';
+  } else {
+    color = 'bg-red-500';
+    label = 'Server unreachable';
+  }
+
+  return (
+    <span className="flex items-center gap-1 text-xs text-gray-500 select-none" title={label}>
+      <span className={`inline-block w-2 h-2 rounded-full ${color}`} />
+      {label}
+    </span>
+  );
+}
 
 export function ExportButtons({ data, onClear, onSubmit, submitting, submitSuccess, submitError, onAdminOpen }) {
+  const { isOnline, supabaseReachable, checking, canSubmit } = useConnectivity();
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg no-print">
+      {!isOnline && (
+        <div className="max-w-4xl mx-auto px-4 pt-2">
+          <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1">
+            You are offline. Connect to the internet to submit reports.
+          </p>
+        </div>
+      )}
+      {isOnline && supabaseReachable === false && !checking && (
+        <div className="max-w-4xl mx-auto px-4 pt-2">
+          <p className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded px-2 py-1">
+            Cannot reach the server. Submissions are disabled until connectivity is restored.
+          </p>
+        </div>
+      )}
       {submitError && (
         <div className="max-w-4xl mx-auto px-4 pt-2">
           <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1">{submitError}</p>
@@ -17,7 +58,7 @@ export function ExportButtons({ data, onClear, onSubmit, submitting, submitSucce
           </p>
         </div>
       )}
-      <div className="max-w-4xl mx-auto px-4 py-3 flex gap-3">
+      <div className="max-w-4xl mx-auto px-4 py-3 flex gap-3 items-center">
         <button
           onClick={() => downloadCSV(data)}
           className="flex-1 bg-green-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
@@ -47,9 +88,9 @@ export function ExportButtons({ data, onClear, onSubmit, submitting, submitSucce
         </button>
         <button
           onClick={onSubmit}
-          disabled={submitting}
-          title="Submit report to cloud"
-          className="flex-1 bg-purple-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+          disabled={submitting || !canSubmit}
+          title={!canSubmit ? 'No connection to server' : 'Submit report to cloud'}
+          className="flex-1 bg-purple-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting ? (
             <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,6 +124,7 @@ export function ExportButtons({ data, onClear, onSubmit, submitting, submitSucce
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </button>
+        <ConnectivityDot isOnline={isOnline} supabaseReachable={supabaseReachable} checking={checking} />
       </div>
     </div>
   );
