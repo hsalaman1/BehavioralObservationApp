@@ -11,6 +11,32 @@ input, textarea, button, select {
   font-size: 16px;
 }
 
+/* Minimum 44px tap target for accessibility (Apple/Google guidelines).
+   Components can opt out by adding their own min-h class. */
+@media (max-width: 767px) {
+  button:not(.no-min-tap),
+  [role="button"]:not(.no-min-tap),
+  input[type="checkbox"]:not(.no-min-tap),
+  input[type="radio"]:not(.no-min-tap),
+  a:not(.no-min-tap) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  input[type="checkbox"], input[type="radio"] {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* Bottom-sheet slide-up animation */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.25s ease-out;
+}
+
 /* Custom scrollbar for webkit */
 ::-webkit-scrollbar {
   width: 6px;

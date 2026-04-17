@@ -21,6 +21,7 @@ import { BehaviorDataForm } from './components/Forms/BehaviorDataForm';
 import { ABCEntry } from './components/Forms/ABCEntry';
 import { RecommendationsForm } from './components/Forms/RecommendationsForm';
 import { ObservationNote } from './components/Forms/ObservationNote';
+import { CollapsibleSection } from './components/UI/CollapsibleSection';
 
 const TABS = [
   { id: 'narrative', label: 'Narrative' },
@@ -147,11 +148,21 @@ function App() {
       case 'visitNotes':
         return (
           <div className="space-y-4">
-            <VisitNotesForm data={data} onChange={updateField} />
-            <InterventionForm data={data} onChange={updateField} />
-            <DataCollectionForm data={data} onChange={updateField} />
-            <SupportsForm data={data} onChange={updateField} />
-            <BIPForm data={data} onChange={updateField} />
+            <CollapsibleSection title="Visit Notes" defaultOpen>
+              <VisitNotesForm data={data} onChange={updateField} />
+            </CollapsibleSection>
+            <CollapsibleSection title="Activity Notes">
+              <InterventionForm data={data} onChange={updateField} />
+            </CollapsibleSection>
+            <CollapsibleSection title="Data Collection Status">
+              <DataCollectionForm data={data} onChange={updateField} />
+            </CollapsibleSection>
+            <CollapsibleSection title="Supports Present">
+              <SupportsForm data={data} onChange={updateField} />
+            </CollapsibleSection>
+            <CollapsibleSection title="Implementation of the BIP">
+              <BIPForm data={data} onChange={updateField} />
+            </CollapsibleSection>
           </div>
         );
       case 'data':
@@ -173,7 +184,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-24">
+    <div className="min-h-screen bg-gray-100 pb-44 md:pb-24">
       <ObservationHeader
         header={data.header}
         isObserving={isObserving}
@@ -182,14 +193,14 @@ function App() {
         onEnd={() => setIsObserving(false)}
       />
 
-      <div className="max-w-4xl mx-auto px-4 py-3">
+      <div className="max-w-4xl md:max-w-5xl mx-auto px-4 py-3">
         <TimerPanel
           durationData={data.durationData}
           onDurationChange={handleDurationChange}
         />
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 mb-3">
+      <div className="max-w-4xl md:max-w-5xl mx-auto px-4 mb-3">
         <QuickTallyPanel
           counters={data.behaviorCounts}
           transitions={data.transitions}
@@ -202,7 +213,7 @@ function App() {
         />
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 mb-3">
+      <div className="max-w-4xl md:max-w-5xl mx-auto px-4 mb-3">
         <TabNavigation
           tabs={TABS}
           activeTab={activeTab}
@@ -210,7 +221,7 @@ function App() {
         />
       </div>
 
-      <div className="max-w-4xl mx-auto px-4">{renderTabContent()}</div>
+      <div className="max-w-4xl md:max-w-5xl mx-auto px-4">{renderTabContent()}</div>
 
       {lastSaved && (
         <div className="fixed bottom-20 right-4 bg-white shadow-lg rounded-lg px-3 py-2 text-xs text-gray-500 flex items-center gap-2 no-print">
@@ -227,7 +238,7 @@ function App() {
 
       {showAdmin && (
         <div className="fixed inset-0 bg-gray-100 z-50 overflow-y-auto pb-24">
-          <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="max-w-4xl md:max-w-5xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-lg font-bold text-gray-800">Admin — Reports</h1>
               <button

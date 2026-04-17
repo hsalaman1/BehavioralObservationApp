@@ -4,6 +4,7 @@ import { AdminLogin } from '../Admin/AdminLogin';
 import { downloadDocx } from '../Export/generateDocx';
 import { downloadCSV } from '../Export/generateCSV';
 import { downloadPdf } from '../Export/generatePdf';
+import { ReportFileUpload } from './ReportFileUpload';
 
 function formatDate(isoString) {
   if (!isoString) return '—';
@@ -96,6 +97,7 @@ export function ReportsPanel() {
           <p className="text-xs text-gray-500 mt-0.5">All observations submitted by observers</p>
         </div>
         <div className="flex items-center gap-3">
+          <ReportFileUpload onUploaded={loadReports} />
           <button
             onClick={loadReports}
             disabled={loading}
@@ -127,7 +129,7 @@ export function ReportsPanel() {
 
       {reports.map((report) => (
         <div key={report.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
             <div className="min-w-0">
               <p className="font-semibold text-gray-800 truncate">
                 {report.student_name || 'Unknown Student'}
@@ -135,7 +137,7 @@ export function ReportsPanel() {
                   <span className="text-gray-400 font-normal text-sm ml-2">#{report.student_id}</span>
                 )}
               </p>
-              <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+              <div className="mt-1 flex flex-col md:flex-row md:flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
                 {report.observer_name && <span>Observer: <span className="text-gray-700">{report.observer_name}</span></span>}
                 {report.school && <span>School: <span className="text-gray-700">{report.school}</span></span>}
                 {report.observation_date && <span>Date: <span className="text-gray-700">{report.observation_date}</span></span>}
@@ -143,32 +145,32 @@ export function ReportsPanel() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 md:shrink-0">
               <button
                 onClick={() => handleDownloadCSV(report)}
                 disabled={!!downloadingId}
-                className="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                className="flex-1 md:flex-none bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 min-h-[44px]"
               >
                 CSV
               </button>
               <button
                 onClick={() => handleDownloadDocx(report)}
                 disabled={!!downloadingId}
-                className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                className="flex-1 md:flex-none bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 min-h-[44px]"
               >
                 {downloadingId === report.id + '-docx' ? '…' : 'Word'}
               </button>
               <button
                 onClick={() => handleDownloadPdf(report)}
                 disabled={!!downloadingId}
-                className="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                className="flex-1 md:flex-none bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 min-h-[44px]"
               >
                 {downloadingId === report.id + '-pdf' ? '…' : 'PDF'}
               </button>
               <button
                 onClick={() => handleDelete(report.id)}
                 disabled={deletingId === report.id}
-                className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+                className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 min-h-[44px] min-w-[44px] flex items-center justify-center"
                 title="Delete report"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

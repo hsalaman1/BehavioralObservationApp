@@ -1,13 +1,19 @@
 import { useTimer } from '../../hooks/useTimer';
 import { formatDuration, formatTotalDuration } from '../../hooks/useTimestamp';
 
-export function DurationTimer({ name, colorClass, bgClass, borderClass, pulseClass, buttonBorderClass = '', data, onDataChange }) {
-  const { isRunning, currentTime, totalAccumulated, instances, toggle } = useTimer(data);
+export function DurationTimer({ name, colorClass, bgClass, borderClass, pulseClass, buttonBorderClass = '', data, onDataChange, onStart, forceStop = false }) {
+  const { isRunning, currentTime, totalAccumulated, instances, toggle } = useTimer(data, {
+    forceStop,
+    onAutoStop: (result) => onDataChange?.(result),
+  });
 
   const handleToggle = () => {
+    const wasRunning = isRunning;
     const result = toggle();
     if (result) {
       onDataChange?.(result);
+    } else if (!wasRunning) {
+      onStart?.();
     }
   };
 
