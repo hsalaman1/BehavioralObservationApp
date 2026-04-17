@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStudentRoster } from '../../hooks/useStudentRoster';
 
 export function StudentPicker({ value, onSelect }) {
-  const { students, addStudent, deleteStudent, error } = useStudentRoster();
+  const { students, addStudent, deleteStudent } = useStudentRoster();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showManage, setShowManage] = useState(false);
 
@@ -36,8 +36,6 @@ export function StudentPicker({ value, onSelect }) {
         <option value="__add__">＋ Add new student…</option>
         {students.length > 0 && <option value="__manage__">⚙ Manage students…</option>}
       </select>
-
-      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
 
       {showAddModal && (
         <AddStudentModal
