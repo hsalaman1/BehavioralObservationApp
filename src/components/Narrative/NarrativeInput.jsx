@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTimestamp } from '../../hooks/useTimestamp';
+import { VoiceDictateButton } from '../UI/VoiceDictateButton';
 
 export function NarrativeInput({ onAddEntry }) {
   const [text, setText] = useState('');
@@ -53,6 +54,8 @@ export function NarrativeInput({ onAddEntry }) {
         className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
         autoComplete="off"
       />
+
+      <VoiceDictateButton onTranscript={(t) => setText((prev) => (prev ? prev + ' ' : '') + t.trim())} />
 
       {/* Add Button */}
       <button
