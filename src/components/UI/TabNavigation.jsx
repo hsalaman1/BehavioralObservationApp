@@ -1,11 +1,11 @@
 export function TabNavigation({ tabs, activeTab, onTabChange }) {
   return (
-    <div className="flex bg-white rounded-lg overflow-hidden shadow-sm">
+    <div className="flex bg-white rounded-lg shadow-sm overflow-x-auto">
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
-          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+          className={`flex-none px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors first:rounded-l-lg last:rounded-r-lg min-h-[44px] ${
             activeTab === tab.id
               ? 'bg-blue-600 text-white'
               : 'text-gray-600 hover:bg-gray-100'

@@ -173,7 +173,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-24">
+    <div className="min-h-screen bg-gray-100 pb-48 md:pb-24">
       <ObservationHeader
         header={data.header}
         isObserving={isObserving}
@@ -226,21 +226,27 @@ function App() {
       )}
 
       {showAdmin && (
-        <div className="fixed inset-0 bg-gray-100 z-50 overflow-y-auto pb-24">
-          <div className="max-w-4xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-lg font-bold text-gray-800">Admin — Reports</h1>
-              <button
-                onClick={() => setShowAdmin(false)}
-                className="text-gray-500 hover:text-gray-800 flex items-center gap-1 text-sm"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                Close
-              </button>
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/40 md:hidden" onClick={() => setShowAdmin(false)} />
+          <div className="absolute bottom-0 left-0 right-0 md:inset-0 bg-white rounded-t-2xl md:rounded-none md:bg-gray-100 h-[92vh] md:h-full overflow-y-auto pb-24">
+            <div className="flex justify-center pt-3 pb-1 md:hidden">
+              <div className="w-10 h-1 bg-gray-300 rounded-full" />
             </div>
-            <ReportsPanel />
+            <div className="max-w-4xl mx-auto px-4 py-4">
+              <div className="flex items-center justify-between mb-4">
+                <h1 className="text-lg font-bold text-gray-800">Admin — Reports</h1>
+                <button
+                  onClick={() => setShowAdmin(false)}
+                  className="text-gray-500 hover:text-gray-800 flex items-center gap-1 text-sm min-h-[44px] px-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Close
+                </button>
+              </div>
+              <ReportsPanel />
+            </div>
           </div>
         </div>
       )}

@@ -23,8 +23,8 @@ export function ObservationHeader({ header, isObserving, onHeaderChange, onStart
     <div className="bg-white shadow-sm sticky top-0 z-10">
       <div className="max-w-4xl mx-auto px-4 py-3">
         {/* Top Row: Title and Start/End */}
-        <div className="flex justify-between items-center mb-3">
-          <h1 className="text-xl font-bold text-gray-800">Classroom Behavioral Observation</h1>
+        <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
+          <h1 className="text-base md:text-xl font-bold text-gray-800">Classroom Behavioral Observation</h1>
           <div className="flex items-center gap-2">
             {isObserving && (
               <span className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
@@ -35,14 +35,14 @@ export function ObservationHeader({ header, isObserving, onHeaderChange, onStart
             {!header.startTime ? (
               <button
                 onClick={handleStartObservation}
-                className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+                className="bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors min-h-[44px]"
               >
                 Start Observation
               </button>
             ) : !header.endTime ? (
               <button
                 onClick={handleEndObservation}
-                className="bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                className="bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors min-h-[44px]"
               >
                 End Observation
               </button>

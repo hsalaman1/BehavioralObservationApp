@@ -127,7 +127,7 @@ export function ReportsPanel() {
 
       {reports.map((report) => (
         <div key={report.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div className="min-w-0">
               <p className="font-semibold text-gray-800 truncate">
                 {report.student_name || 'Unknown Student'}
@@ -143,32 +143,32 @@ export function ReportsPanel() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 sm:shrink-0">
               <button
                 onClick={() => handleDownloadCSV(report)}
                 disabled={!!downloadingId}
-                className="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                className="flex-1 sm:flex-none bg-green-100 text-green-700 hover:bg-green-200 px-3 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 min-h-[44px] sm:min-h-0"
               >
                 CSV
               </button>
               <button
                 onClick={() => handleDownloadDocx(report)}
                 disabled={!!downloadingId}
-                className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                className="flex-1 sm:flex-none bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 min-h-[44px] sm:min-h-0"
               >
                 {downloadingId === report.id + '-docx' ? '…' : 'Word'}
               </button>
               <button
                 onClick={() => handleDownloadPdf(report)}
                 disabled={!!downloadingId}
-                className="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                className="flex-1 sm:flex-none bg-red-100 text-red-700 hover:bg-red-200 px-3 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 min-h-[44px] sm:min-h-0"
               >
                 {downloadingId === report.id + '-pdf' ? '…' : 'PDF'}
               </button>
               <button
                 onClick={() => handleDelete(report.id)}
                 disabled={deletingId === report.id}
-                className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+                className="text-red-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 min-h-[44px] sm:min-h-0"
                 title="Delete report"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
