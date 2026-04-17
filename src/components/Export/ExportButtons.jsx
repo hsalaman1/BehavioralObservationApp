@@ -1,6 +1,7 @@
 import { downloadCSV } from './generateCSV';
 import { downloadDocx } from './generateDocx';
 import { downloadPdf } from './generatePdf';
+import { downloadReportFile } from './generateReportFile';
 import { useConnectivity } from '../../hooks/useConnectivity';
 import { useKeyboardVisible } from '../../hooks/useKeyboardVisible';
 
@@ -137,15 +138,24 @@ export function ExportButtons({ data, onClear, onSubmit, submitting, submitSucce
             🗑️
           </button>
           <button
+            onClick={() => downloadReportFile(data)}
+            title="Save report as file (for offline / email to admin)"
+            className={`${ICON} bg-indigo-100 text-indigo-700 hover:bg-indigo-200 flex-1 md:flex-none md:px-4 md:order-7`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
+            </svg>
+          </button>
+          <button
             onClick={onAdminOpen}
             title="Admin"
-            className={`${ICON} bg-gray-100 text-gray-500 hover:text-gray-700 hover:bg-gray-200 flex-1 md:flex-none md:px-3 md:order-7`}
+            className={`${ICON} bg-gray-100 text-gray-500 hover:text-gray-700 hover:bg-gray-200 flex-1 md:flex-none md:px-3 md:order-8`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </button>
-          <div className="md:order-8">
+          <div className="md:order-9">
             <ConnectivityDot isOnline={isOnline} supabaseReachable={supabaseReachable} checking={checking} />
           </div>
         </div>

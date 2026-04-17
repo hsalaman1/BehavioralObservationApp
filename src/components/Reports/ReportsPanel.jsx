@@ -4,6 +4,7 @@ import { AdminLogin } from '../Admin/AdminLogin';
 import { downloadDocx } from '../Export/generateDocx';
 import { downloadCSV } from '../Export/generateCSV';
 import { downloadPdf } from '../Export/generatePdf';
+import { ReportFileUpload } from './ReportFileUpload';
 
 function formatDate(isoString) {
   if (!isoString) return '—';
@@ -96,6 +97,7 @@ export function ReportsPanel() {
           <p className="text-xs text-gray-500 mt-0.5">All observations submitted by observers</p>
         </div>
         <div className="flex items-center gap-3">
+          <ReportFileUpload onUploaded={loadReports} />
           <button
             onClick={loadReports}
             disabled={loading}

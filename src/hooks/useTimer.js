@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 
-export function useTimer(initialData = { totalSeconds: 0, instances: 0 }) {
+export function useTimer(initialData = { totalSeconds: 0, instances: 0 }, options = {}) {
+  const { forceStop = false, onAutoStop } = options;
   const [isRunning, setIsRunning] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [totalAccumulated, setTotalAccumulated] = useState(initialData.totalSeconds || 0);
@@ -47,6 +48,20 @@ export function useTimer(initialData = { totalSeconds: 0, instances: 0 }) {
       return null;
     }
   }, [isRunning, start, stop]);
+
+  useEffect(() => {
+    if (forceStop && isRunning) {
+      clearInterval(intervalRef.current);
+      setIsRunning(false);
+      const finalTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      const newTotal = totalAccumulated + finalTime;
+      const newInstances = instances + 1;
+      setTotalAccumulated(newTotal);
+      setInstances(newInstances);
+      setCurrentTime(0);
+      onAutoStop?.({ totalSeconds: newTotal, instances: newInstances });
+    }
+  }, [forceStop, isRunning, totalAccumulated, instances, onAutoStop]);
 
   const reset = useCallback(() => {
     clearInterval(intervalRef.current);
