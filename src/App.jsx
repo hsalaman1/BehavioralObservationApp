@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useObservationStorage } from './hooks/useLocalStorage';
 import { useSupabase } from './hooks/useSupabase';
+import { useStudents } from './hooks/useStudents';
 
 // Components
 import { ObservationHeader } from './components/Header/ObservationHeader';
@@ -33,9 +34,25 @@ const TABS = [
 function App() {
   const { data, setData, updateField, resetObservation, lastSaved } = useObservationStorage();
   const { submitObservation, submitting, submitError, submitSuccess } = useSupabase();
+  const { students, fetchStudents, addStudent } = useStudents();
   const [activeTab, setActiveTab] = useState('narrative');
   const [isObserving, setIsObserving] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showDraftBanner, setShowDraftBanner] = useState(() => {
+    if (sessionStorage.getItem('draft_banner_shown')) return false;
+    try {
+      const stored = localStorage.getItem('observation-data');
+      if (!stored) return false;
+      const parsed = JSON.parse(stored);
+      return !!(parsed.header?.studentName || parsed.header?.startTime || parsed.narratives?.length > 0);
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
 
   useEffect(() => {
     setIsObserving(!!data.header.startTime && !data.header.endTime);
@@ -174,12 +191,35 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 pb-48 md:pb-24">
+      {showDraftBanner && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 flex items-center justify-between gap-4 no-print z-20 relative">
+          <span className="text-sm text-amber-800">
+            <strong>Draft found</strong> — continue where you left off, or start fresh?
+          </span>
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={() => { sessionStorage.setItem('draft_banner_shown', '1'); setShowDraftBanner(false); }}
+              className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-amber-700"
+            >
+              Continue
+            </button>
+            <button
+              onClick={() => { resetObservation(); sessionStorage.setItem('draft_banner_shown', '1'); setShowDraftBanner(false); }}
+              className="bg-white border border-amber-300 text-amber-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-amber-50"
+            >
+              Start Fresh
+            </button>
+          </div>
+        </div>
+      )}
       <ObservationHeader
         header={data.header}
         isObserving={isObserving}
         onHeaderChange={handleHeaderChange}
         onStart={() => setIsObserving(true)}
         onEnd={() => setIsObserving(false)}
+        students={students}
+        onAddStudent={addStudent}
       />
 
       <div className="max-w-4xl mx-auto px-4 py-3">
