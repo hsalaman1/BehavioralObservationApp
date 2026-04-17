@@ -35,8 +35,15 @@ export function useStudentRoster() {
         .select('*')
         .order('name', { ascending: true });
       if (error) throw error;
-      setStudents(data || []);
-      saveCache(data || []);
+      const remote = data || [];
+      setStudents(prev => {
+        const byId = new Map();
+        remote.forEach(s => byId.set(s.id, s));
+        prev.forEach(s => { if (!byId.has(s.id)) byId.set(s.id, s); });
+        const merged = Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name));
+        saveCache(merged);
+        return merged;
+      });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -50,36 +57,52 @@ export function useStudentRoster() {
 
   const addStudent = useCallback(async ({ name, student_id, school }) => {
     if (!name?.trim()) throw new Error('Student name is required');
-    if (!isSupabaseConfigured) {
-      const local = { id: crypto.randomUUID(), name: name.trim(), student_id: student_id?.trim() || '', school: school?.trim() || '' };
-      setStudents(prev => {
-        const next = [...prev, local].sort((a, b) => a.name.localeCompare(b.name));
-        saveCache(next);
-        return next;
-      });
-      return local;
-    }
-    const payload = { name: name.trim(), student_id: student_id?.trim() || '', school: school?.trim() || '' };
-    const { data, error } = await supabase.from('students').insert(payload).select().single();
-    if (error) throw error;
+    const local = {
+      id: crypto.randomUUID(),
+      name: name.trim(),
+      student_id: student_id?.trim() || '',
+      school: school?.trim() || '',
+    };
     setStudents(prev => {
-      const next = [...prev, data].sort((a, b) => a.name.localeCompare(b.name));
+      const next = [...prev, local].sort((a, b) => a.name.localeCompare(b.name));
       saveCache(next);
       return next;
     });
-    return data;
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from('students')
+          .insert(local)
+          .select()
+          .single();
+        if (!error && data) {
+          setStudents(prev => {
+            const next = prev.map(s => (s.id === local.id ? data : s));
+            saveCache(next);
+            return next;
+          });
+          return data;
+        }
+      } catch {
+        // network/CORS failure — keep local copy
+      }
+    }
+    return local;
   }, []);
 
   const deleteStudent = useCallback(async (id) => {
-    if (isSupabaseConfigured) {
-      const { error } = await supabase.from('students').delete().eq('id', id);
-      if (error) throw error;
-    }
     setStudents(prev => {
       const next = prev.filter(s => s.id !== id);
       saveCache(next);
       return next;
     });
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('students').delete().eq('id', id);
+      } catch {
+        // ignore — already removed locally
+      }
+    }
   }, []);
 
   return { students, loading, error, refresh, addStudent, deleteStudent };
