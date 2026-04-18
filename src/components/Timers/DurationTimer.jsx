@@ -19,24 +19,24 @@ export function DurationTimer({ name, colorClass, bgClass, borderClass, pulseCla
 
   return (
     <div
-      className={`rounded-xl p-3 ${bgClass} border-2 transition-all ${
+      className={`rounded-xl p-2 md:p-3 ${bgClass} border-2 transition-all ${
         isRunning ? `${borderClass} ${pulseClass}` : 'border-transparent'
       }`}
     >
       <div className="text-center">
-        <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
+        <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-0.5 md:mb-1">
           {name}
         </div>
 
         {/* Current Timer Display */}
-        <div className={`text-3xl font-mono font-bold mb-2 ${isRunning ? colorClass : 'text-gray-800'}`}>
+        <div className={`text-2xl md:text-3xl font-mono font-bold mb-1 md:mb-2 ${isRunning ? colorClass : 'text-gray-800'}`}>
           {formatDuration(currentTime)}
         </div>
 
         {/* Toggle Button */}
         <button
           onClick={handleToggle}
-          className={`w-full py-2.5 px-4 rounded-lg font-semibold text-white text-sm transition-all active:scale-95 ${
+          className={`w-full py-2 md:py-2.5 px-2 md:px-4 rounded-lg font-semibold text-white text-sm min-h-[44px] transition-all active:scale-95 ${
             isRunning
               ? 'bg-gray-600 hover:bg-gray-700'
               : `${colorClass.replace('text-', 'bg-')} hover:opacity-90 ${buttonBorderClass}`
@@ -45,8 +45,8 @@ export function DurationTimer({ name, colorClass, bgClass, borderClass, pulseCla
           {isRunning ? 'STOP' : 'START'}
         </button>
 
-        {/* Accumulated Stats */}
-        <div className="mt-2 grid grid-cols-2 gap-1 text-xs text-gray-600">
+        {/* Accumulated Stats — desktop only to keep the mobile footer compact */}
+        <div className="mt-2 hidden md:grid grid-cols-2 gap-1 text-xs text-gray-600">
           <div className="bg-white/50 rounded px-2 py-1">
             <span className="font-medium">Total:</span> {formatTotalDuration(totalAccumulated)}
           </div>

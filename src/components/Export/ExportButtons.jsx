@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { downloadCSV } from './generateCSV';
 import { downloadDocx } from './generateDocx';
 import { downloadPdf } from './generatePdf';
@@ -5,7 +6,7 @@ import { downloadReportFile } from './generateReportFile';
 import { useConnectivity } from '../../hooks/useConnectivity';
 import { useKeyboardVisible } from '../../hooks/useKeyboardVisible';
 
-function ConnectivityDot({ isOnline, supabaseReachable, checking }) {
+function ConnectivityDot({ isOnline, supabaseReachable, checking, showLabelOnMobile = false }) {
   let color, label;
   if (!isOnline) {
     color = 'bg-red-500';
@@ -22,144 +23,266 @@ function ConnectivityDot({ isOnline, supabaseReachable, checking }) {
   }
 
   return (
-    <span className="flex items-center gap-1 text-xs text-gray-500 select-none ml-auto" title={label}>
+    <span className="flex items-center gap-1 text-xs text-gray-500 select-none" title={label}>
       <span className={`inline-block w-2 h-2 rounded-full ${color}`} />
-      <span className="hidden md:inline">{label}</span>
+      <span className={showLabelOnMobile ? 'inline' : 'hidden md:inline'}>{label}</span>
     </span>
+  );
+}
+
+function StatusMessages({ isOnline, supabaseReachable, checking, submitError, submitSuccess }) {
+  if (isOnline && supabaseReachable !== false && !submitError && !submitSuccess) return null;
+  return (
+    <div className="space-y-1">
+      {!isOnline && (
+        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1">
+          You are offline. Connect to the internet to submit reports.
+        </p>
+      )}
+      {isOnline && supabaseReachable === false && !checking && (
+        <p className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded px-2 py-1">
+          Cannot reach the server. Submissions are disabled until connectivity is restored.
+        </p>
+      )}
+      {submitError && (
+        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1">{submitError}</p>
+      )}
+      {submitSuccess && (
+        <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2 py-1">
+          Report submitted successfully!
+        </p>
+      )}
+    </div>
   );
 }
 
 const PRIMARY = 'min-h-[44px] py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2';
 const ICON = 'min-h-[44px] min-w-[44px] rounded-lg text-sm font-medium transition-colors flex items-center justify-center';
 
-export function ExportButtons({ data, onClear, onSubmit, submitting, submitSuccess, submitError, onAdminOpen }) {
+function ActionButtons({ data, onClear, onSubmit, submitting, canSubmit, onAdminOpen, onActionTaken, variant }) {
+  const wrap = (fn) => () => {
+    fn();
+    onActionTaken?.();
+  };
+  const primaryGridClass =
+    variant === 'sheet'
+      ? 'grid grid-cols-2 gap-2'
+      : 'grid grid-cols-2 gap-2 md:contents';
+  const secondaryClass =
+    variant === 'sheet'
+      ? 'flex items-center gap-2 mt-2'
+      : 'flex items-center gap-2 mt-2 md:contents md:gap-3 md:mt-0';
+
+  return (
+    <>
+      <div className={primaryGridClass}>
+        <button
+          onClick={onSubmit}
+          disabled={submitting || !canSubmit}
+          title={!canSubmit ? 'No connection to server' : 'Submit report to cloud'}
+          className={`${PRIMARY} bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed md:flex-1 md:order-4`}
+        >
+          {submitting ? (
+            <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+            </svg>
+          )}
+          {submitting ? 'Submitting…' : 'Submit'}
+        </button>
+
+        <button
+          onClick={wrap(() => downloadDocx(data))}
+          className={`${PRIMARY} bg-blue-600 text-white hover:bg-blue-700 md:flex-1 md:order-2`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Word
+        </button>
+
+        <button
+          onClick={wrap(() => downloadPdf(data))}
+          className={`${PRIMARY} bg-red-600 text-white hover:bg-red-700 md:flex-1 md:order-3`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+          PDF
+        </button>
+
+        <button
+          onClick={wrap(() => downloadCSV(data))}
+          className={`${PRIMARY} bg-green-600 text-white hover:bg-green-700 md:flex-1 md:order-1`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          CSV
+        </button>
+      </div>
+
+      <div className={secondaryClass}>
+        <button
+          onClick={wrap(() => window.print())}
+          title="Print"
+          className={`${ICON} bg-gray-200 text-gray-700 hover:bg-gray-300 flex-1 md:flex-none md:px-4 md:order-5`}
+        >
+          🖨️
+        </button>
+        <button
+          onClick={onClear}
+          title="Clear all data"
+          className={`${ICON} bg-red-100 text-red-700 hover:bg-red-200 flex-1 md:flex-none md:px-4 md:order-6`}
+        >
+          🗑️
+        </button>
+        <button
+          onClick={wrap(() => downloadReportFile(data))}
+          title="Save report as file (for offline / email to admin)"
+          className={`${ICON} bg-indigo-100 text-indigo-700 hover:bg-indigo-200 flex-1 md:flex-none md:px-4 md:order-7`}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
+          </svg>
+        </button>
+        <button
+          onClick={wrap(onAdminOpen)}
+          title="Admin"
+          className={`${ICON} bg-gray-100 text-gray-500 hover:text-gray-700 hover:bg-gray-200 flex-1 md:flex-none md:px-3 md:order-8`}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </button>
+      </div>
+    </>
+  );
+}
+
+export function ExportButtons({
+  data,
+  onClear,
+  onSubmit,
+  submitting,
+  submitSuccess,
+  submitError,
+  onAdminOpen,
+  open = false,
+  onClose,
+}) {
   const { isOnline, supabaseReachable, checking, canSubmit } = useConnectivity();
   const keyboardVisible = useKeyboardVisible();
 
-  return (
+  // Auto-close the mobile sheet after a successful submission.
+  useEffect(() => {
+    if (submitSuccess && open) {
+      const t = setTimeout(() => onClose?.(), 800);
+      return () => clearTimeout(t);
+    }
+  }, [submitSuccess, open, onClose]);
+
+  const desktopBar = (
     <div
-      className={`fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg no-print pb-[env(safe-area-inset-bottom)] ${
-        keyboardVisible ? 'hidden md:block' : ''
+      className={`hidden md:block fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg no-print pb-[env(safe-area-inset-bottom)] ${
+        keyboardVisible ? 'md:block' : ''
       }`}
     >
-      {!isOnline && (
+      {(submitError || submitSuccess || !isOnline || supabaseReachable === false) && (
         <div className="max-w-4xl md:max-w-5xl mx-auto px-4 pt-2">
-          <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1">
-            You are offline. Connect to the internet to submit reports.
-          </p>
-        </div>
-      )}
-      {isOnline && supabaseReachable === false && !checking && (
-        <div className="max-w-4xl md:max-w-5xl mx-auto px-4 pt-2">
-          <p className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded px-2 py-1">
-            Cannot reach the server. Submissions are disabled until connectivity is restored.
-          </p>
-        </div>
-      )}
-      {submitError && (
-        <div className="max-w-4xl md:max-w-5xl mx-auto px-4 pt-2">
-          <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1">{submitError}</p>
-        </div>
-      )}
-      {submitSuccess && (
-        <div className="max-w-4xl md:max-w-5xl mx-auto px-4 pt-2">
-          <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2 py-1">
-            Report submitted successfully!
-          </p>
+          <StatusMessages
+            isOnline={isOnline}
+            supabaseReachable={supabaseReachable}
+            checking={checking}
+            submitError={submitError}
+            submitSuccess={submitSuccess}
+          />
         </div>
       )}
 
       <div className="max-w-4xl md:max-w-5xl mx-auto px-4 py-3 md:flex md:gap-3 md:items-center">
-        {/* Primary row: 2x2 on mobile, inline on desktop */}
-        <div className="grid grid-cols-2 gap-2 md:contents">
-          <button
-            onClick={onSubmit}
-            disabled={submitting || !canSubmit}
-            title={!canSubmit ? 'No connection to server' : 'Submit report to cloud'}
-            className={`${PRIMARY} bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed md:flex-1 md:order-4`}
-          >
-            {submitting ? (
-              <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-              </svg>
-            )}
-            {submitting ? 'Submitting…' : 'Submit'}
-          </button>
-
-          <button
-            onClick={() => downloadDocx(data)}
-            className={`${PRIMARY} bg-blue-600 text-white hover:bg-blue-700 md:flex-1 md:order-2`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Word
-          </button>
-
-          <button
-            onClick={() => downloadPdf(data)}
-            className={`${PRIMARY} bg-red-600 text-white hover:bg-red-700 md:flex-1 md:order-3`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-            PDF
-          </button>
-
-          <button
-            onClick={() => downloadCSV(data)}
-            className={`${PRIMARY} bg-green-600 text-white hover:bg-green-700 md:flex-1 md:order-1`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            CSV
-          </button>
-        </div>
-
-        {/* Secondary row: row on mobile, inline on desktop */}
-        <div className="flex items-center gap-2 mt-2 md:contents md:gap-3 md:mt-0">
-          <button
-            onClick={() => window.print()}
-            title="Print"
-            className={`${ICON} bg-gray-200 text-gray-700 hover:bg-gray-300 flex-1 md:flex-none md:px-4 md:order-5`}
-          >
-            🖨️
-          </button>
-          <button
-            onClick={onClear}
-            title="Clear all data"
-            className={`${ICON} bg-red-100 text-red-700 hover:bg-red-200 flex-1 md:flex-none md:px-4 md:order-6`}
-          >
-            🗑️
-          </button>
-          <button
-            onClick={() => downloadReportFile(data)}
-            title="Save report as file (for offline / email to admin)"
-            className={`${ICON} bg-indigo-100 text-indigo-700 hover:bg-indigo-200 flex-1 md:flex-none md:px-4 md:order-7`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
-            </svg>
-          </button>
-          <button
-            onClick={onAdminOpen}
-            title="Admin"
-            className={`${ICON} bg-gray-100 text-gray-500 hover:text-gray-700 hover:bg-gray-200 flex-1 md:flex-none md:px-3 md:order-8`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </button>
-          <div className="md:order-9">
-            <ConnectivityDot isOnline={isOnline} supabaseReachable={supabaseReachable} checking={checking} />
-          </div>
+        <ActionButtons
+          data={data}
+          onClear={onClear}
+          onSubmit={onSubmit}
+          submitting={submitting}
+          canSubmit={canSubmit}
+          onAdminOpen={onAdminOpen}
+          variant="bar"
+        />
+        <div className="md:order-9 md:ml-auto">
+          <ConnectivityDot isOnline={isOnline} supabaseReachable={supabaseReachable} checking={checking} />
         </div>
       </div>
     </div>
+  );
+
+  const mobileSheet = open ? (
+    <div className="md:hidden fixed inset-0 z-40 no-print">
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+        <div className="flex items-center justify-between px-4 pt-3 pb-2">
+          <div className="flex items-center gap-2">
+            <span className="block w-10 h-1 rounded-full bg-gray-300" aria-hidden="true" />
+            <span className="text-sm font-semibold text-gray-700 ml-2">Actions</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <ConnectivityDot
+              isOnline={isOnline}
+              supabaseReachable={supabaseReachable}
+              checking={checking}
+              showLabelOnMobile
+            />
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close actions menu"
+              className="min-h-[44px] min-w-[44px] rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 flex items-center justify-center"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="px-4 pb-3">
+          <StatusMessages
+            isOnline={isOnline}
+            supabaseReachable={supabaseReachable}
+            checking={checking}
+            submitError={submitError}
+            submitSuccess={submitSuccess}
+          />
+        </div>
+
+        <div className="px-4 pb-4">
+          <ActionButtons
+            data={data}
+            onClear={onClear}
+            onSubmit={onSubmit}
+            submitting={submitting}
+            canSubmit={canSubmit}
+            onAdminOpen={onAdminOpen}
+            onActionTaken={onClose}
+            variant="sheet"
+          />
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  return (
+    <>
+      {desktopBar}
+      {mobileSheet}
+    </>
   );
 }
