@@ -32,7 +32,7 @@ function ConnectivityDot({ isOnline, supabaseReachable, checking }) {
 const PRIMARY = 'min-h-[44px] py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2';
 const ICON = 'min-h-[44px] min-w-[44px] rounded-lg text-sm font-medium transition-colors flex items-center justify-center';
 
-export function ExportButtons({ data, onClear, onSubmit, submitting, submitSuccess, submitError, onAdminOpen }) {
+export function ExportButtons({ data, onClear, onSubmit, submitting, submitSuccess, submitError, submitMode, onAdminOpen, onMyReportsOpen }) {
   const { isOnline, supabaseReachable, checking, canSubmit } = useConnectivity();
   const keyboardVisible = useKeyboardVisible();
 
@@ -64,7 +64,7 @@ export function ExportButtons({ data, onClear, onSubmit, submitting, submitSucce
       {submitSuccess && (
         <div className="max-w-4xl md:max-w-5xl mx-auto px-4 pt-2">
           <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2 py-1">
-            Report submitted successfully!
+            {submitMode === 'update' ? 'Report updated successfully!' : 'Report submitted successfully!'}
           </p>
         </div>
       )}
@@ -147,15 +147,24 @@ export function ExportButtons({ data, onClear, onSubmit, submitting, submitSucce
             </svg>
           </button>
           <button
+            onClick={onMyReportsOpen}
+            title="My prior reports"
+            className={`${ICON} bg-purple-100 text-purple-700 hover:bg-purple-200 flex-1 md:flex-none md:px-3 md:order-8`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+          </button>
+          <button
             onClick={onAdminOpen}
             title="Admin"
-            className={`${ICON} bg-gray-100 text-gray-500 hover:text-gray-700 hover:bg-gray-200 flex-1 md:flex-none md:px-3 md:order-8`}
+            className={`${ICON} bg-gray-100 text-gray-500 hover:text-gray-700 hover:bg-gray-200 flex-1 md:flex-none md:px-3 md:order-9`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </button>
-          <div className="md:order-9">
+          <div className="md:order-10">
             <ConnectivityDot isOnline={isOnline} supabaseReachable={supabaseReachable} checking={checking} />
           </div>
         </div>

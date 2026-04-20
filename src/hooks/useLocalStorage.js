@@ -52,6 +52,7 @@ export function useObservationStorage() {
 
   const getInitialState = () => ({
     id: crypto.randomUUID(),
+    remoteId: null,
     createdAt: new Date().toISOString(),
     lastModified: new Date().toISOString(),
     status: 'in-progress',
@@ -171,11 +172,25 @@ export function useObservationStorage() {
     setData(getInitialState());
   }, [clearValue, setData]);
 
+  // Load a previously submitted observation from Supabase back into the editor so
+  // the user can continue adding to it. The Supabase row id is stamped onto
+  // `remoteId` so a subsequent submit performs an UPDATE instead of an INSERT.
+  const loadObservation = useCallback((remoteRow) => {
+    if (!remoteRow || !remoteRow.data) return;
+    setData({
+      ...remoteRow.data,
+      remoteId: remoteRow.id,
+      status: 'in-progress',
+      lastModified: new Date().toISOString(),
+    });
+  }, [setData]);
+
   return {
     data,
     setData,
     updateField,
     resetObservation,
+    loadObservation,
     lastSaved
   };
 }
