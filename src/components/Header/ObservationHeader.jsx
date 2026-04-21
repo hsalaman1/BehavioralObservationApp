@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTimestamp } from '../../hooks/useTimestamp';
 import { StudentPicker } from '../Students/StudentPicker';
 
-export function ObservationHeader({ header, isObserving, onHeaderChange, onStart, onEnd }) {
+export function ObservationHeader({ header, isObserving, isResumed = false, onHeaderChange, onStart, onEnd }) {
   const { getTimestamp } = useTimestamp();
   const [selectedStudentId, setSelectedStudentId] = useState('');
 
@@ -35,6 +35,11 @@ export function ObservationHeader({ header, isObserving, onHeaderChange, onStart
 
   return (
     <div className="bg-white shadow-sm sticky top-0 z-10">
+      {isResumed && (
+        <div className="bg-amber-50 border-b border-amber-200 text-amber-900 text-xs px-4 py-1.5 text-center">
+          Editing a previously submitted report — saving again will overwrite the original.
+        </div>
+      )}
       <div className="max-w-4xl md:max-w-5xl mx-auto px-4 py-3">
         {/* Top Row: Title and Start/End */}
         <div className="flex justify-between items-center mb-3 gap-2">

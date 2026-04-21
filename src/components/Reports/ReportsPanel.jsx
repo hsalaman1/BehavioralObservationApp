@@ -11,7 +11,7 @@ function formatDate(isoString) {
   return new Date(isoString).toLocaleString();
 }
 
-export function ReportsPanel() {
+export function ReportsPanel({ onResume }) {
   const { fetchObservations, deleteObservation } = useSupabase();
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => sessionStorage.getItem('admin_auth') === '1'
@@ -70,6 +70,16 @@ export function ReportsPanel() {
     } finally {
       setDownloadingId(null);
     }
+  };
+
+  const handleResume = (report) => {
+    if (!onResume) return;
+    const ok = window.confirm(
+      'Resume this report? Your current in-progress observation will be replaced, ' +
+      'and saving again will overwrite this report.'
+    );
+    if (!ok) return;
+    onResume(report);
   };
 
   const handleDelete = async (id) => {
@@ -146,6 +156,15 @@ export function ReportsPanel() {
             </div>
 
             <div className="flex items-center gap-2 md:shrink-0">
+              {onResume && (
+                <button
+                  onClick={() => handleResume(report)}
+                  className="flex-1 md:flex-none bg-purple-100 text-purple-700 hover:bg-purple-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors min-h-[44px]"
+                  title="Reopen this report and continue adding to it"
+                >
+                  Resume
+                </button>
+              )}
               <button
                 onClick={() => handleDownloadCSV(report)}
                 disabled={!!downloadingId}

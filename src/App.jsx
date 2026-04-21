@@ -10,6 +10,7 @@ import { TabNavigation } from './components/UI/TabNavigation';
 import { NarrativePanel } from './components/Narrative/NarrativePanel';
 import { ExportButtons } from './components/Export/ExportButtons';
 import { ReportsPanel } from './components/Reports/ReportsPanel';
+import { MyReportsPanel } from './components/Reports/MyReportsPanel';
 
 // Forms
 import { VisitNotesForm } from './components/Forms/VisitNotesForm';
@@ -32,11 +33,12 @@ const TABS = [
 ];
 
 function App() {
-  const { data, setData, updateField, resetObservation, lastSaved } = useObservationStorage();
-  const { submitObservation, submitting, submitError, submitSuccess } = useSupabase();
+  const { data, setData, updateField, resetObservation, loadObservation, lastSaved } = useObservationStorage();
+  const { submitObservation, submitting, submitError, submitSuccess, submitMode } = useSupabase();
   const [activeTab, setActiveTab] = useState('narrative');
   const [isObserving, setIsObserving] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showMyReports, setShowMyReports] = useState(false);
 
   useEffect(() => {
     setIsObserving(!!data.header.startTime && !data.header.endTime);
@@ -124,9 +126,21 @@ function App() {
     }
   }, [resetObservation]);
 
-  const handleSubmit = useCallback(() => {
-    submitObservation(data);
-  }, [submitObservation, data]);
+  const handleSubmit = useCallback(async () => {
+    const result = await submitObservation(data);
+    if (result && result.mode === 'insert' && result.id) {
+      // Stamp the new Supabase row id so subsequent submits UPDATE instead of INSERT.
+      updateField('remoteId', result.id);
+    }
+  }, [submitObservation, data, updateField]);
+
+  const handleResumeReport = useCallback((report) => {
+    loadObservation(report);
+    setShowAdmin(false);
+    setShowMyReports(false);
+    setActiveTab('narrative');
+    setIsObserving(false);
+  }, [loadObservation]);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -188,6 +202,7 @@ function App() {
       <ObservationHeader
         header={data.header}
         isObserving={isObserving}
+        isResumed={!!data.remoteId}
         onHeaderChange={handleHeaderChange}
         onStart={() => setIsObserving(true)}
         onEnd={() => setIsObserving(false)}
@@ -251,9 +266,17 @@ function App() {
                 Close
               </button>
             </div>
-            <ReportsPanel />
+            <ReportsPanel onResume={handleResumeReport} />
           </div>
         </div>
+      )}
+
+      {showMyReports && (
+        <MyReportsPanel
+          observerName={data.header.observer}
+          onResume={handleResumeReport}
+          onClose={() => setShowMyReports(false)}
+        />
       )}
 
       <ExportButtons
@@ -263,7 +286,9 @@ function App() {
         submitting={submitting}
         submitSuccess={submitSuccess}
         submitError={submitError}
+        submitMode={submitMode}
         onAdminOpen={() => setShowAdmin(true)}
+        onMyReportsOpen={() => setShowMyReports(true)}
       />
     </div>
   );

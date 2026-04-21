@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStudentRoster } from '../../hooks/useStudentRoster';
 
 export function StudentPicker({ value, onSelect }) {
-  const { students, addStudent, deleteStudent } = useStudentRoster();
+  const { students, addStudent, deleteStudent, refresh, error, loading } = useStudentRoster();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showManage, setShowManage] = useState(false);
 
@@ -21,7 +21,7 @@ export function StudentPicker({ value, onSelect }) {
   };
 
   return (
-    <>
+    <div className="space-y-1">
       <select
         value={value || ''}
         onChange={handleSelectChange}
@@ -30,12 +30,26 @@ export function StudentPicker({ value, onSelect }) {
         <option value="">Select student…</option>
         {students.map(s => (
           <option key={s.id} value={s.id}>
-            {s.name}{s.student_id ? ` (${s.student_id})` : ''}
+            {s.name}{s.student_id ? ` (${s.student_id})` : ''}{s._pendingSync ? ' — not synced' : ''}
           </option>
         ))}
         <option value="__add__">＋ Add new student…</option>
         {students.length > 0 && <option value="__manage__">⚙ Manage students…</option>}
       </select>
+
+      {error && (
+        <div className="flex items-start gap-2 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+          <span className="flex-1">{error}</span>
+          <button
+            type="button"
+            onClick={() => refresh()}
+            disabled={loading}
+            className="underline hover:text-amber-900 disabled:opacity-60 shrink-0"
+          >
+            {loading ? 'Syncing…' : 'Retry sync'}
+          </button>
+        </div>
+      )}
 
       {showAddModal && (
         <AddStudentModal
@@ -55,7 +69,7 @@ export function StudentPicker({ value, onSelect }) {
           onDelete={deleteStudent}
         />
       )}
-    </>
+    </div>
   );
 }
 
