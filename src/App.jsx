@@ -39,6 +39,7 @@ function App() {
   const [isObserving, setIsObserving] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showMyReports, setShowMyReports] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   useEffect(() => {
     setIsObserving(!!data.header.startTime && !data.header.endTime);
@@ -198,7 +199,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-44 md:pb-24">
+    <div className="min-h-screen bg-gray-100 pb-32 md:pb-24">
       <ObservationHeader
         header={data.header}
         isObserving={isObserving}
@@ -206,13 +207,17 @@ function App() {
         onHeaderChange={handleHeaderChange}
         onStart={() => setIsObserving(true)}
         onEnd={() => setIsObserving(false)}
+        onMenuOpen={() => setActionsOpen(true)}
       />
 
-      <div className="max-w-4xl md:max-w-5xl mx-auto px-4 py-3">
-        <TimerPanel
-          durationData={data.durationData}
-          onDurationChange={handleDurationChange}
-        />
+      {/* Timer panel: fixed footer on mobile (always reachable), inline on desktop */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t shadow-lg px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] no-print md:static md:bg-transparent md:border-0 md:shadow-none md:p-0 md:pb-0 md:z-auto">
+        <div className="max-w-4xl md:max-w-5xl mx-auto md:px-4 md:py-3">
+          <TimerPanel
+            durationData={data.durationData}
+            onDurationChange={handleDurationChange}
+          />
+        </div>
       </div>
 
       <div className="max-w-4xl md:max-w-5xl mx-auto px-4 mb-3">
@@ -239,7 +244,7 @@ function App() {
       <div className="max-w-4xl md:max-w-5xl mx-auto px-4">{renderTabContent()}</div>
 
       {lastSaved && (
-        <div className="fixed bottom-20 right-4 bg-white shadow-lg rounded-lg px-3 py-2 text-xs text-gray-500 flex items-center gap-2 no-print">
+        <div className="fixed bottom-32 md:bottom-20 right-4 bg-white shadow-lg rounded-lg px-3 py-2 text-xs text-gray-500 flex items-center gap-2 no-print">
           <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
@@ -289,6 +294,8 @@ function App() {
         submitMode={submitMode}
         onAdminOpen={() => setShowAdmin(true)}
         onMyReportsOpen={() => setShowMyReports(true)}
+        open={actionsOpen}
+        onClose={() => setActionsOpen(false)}
       />
     </div>
   );
