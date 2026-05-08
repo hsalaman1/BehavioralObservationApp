@@ -27,7 +27,11 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         navigateFallback: '/index.html',
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        navigateFallbackDenylist: [/^\/api\//, /^\/icons\//],
+        cleanupOutdatedCaches: true,
+        // pdfmake's font VFS and the docx bundle both exceed the default 5 MB cap and would
+        // otherwise be silently dropped from precache, breaking offline export.
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.hostname.endsWith('supabase.co'),
@@ -41,6 +45,7 @@ export default defineConfig({
           },
         ],
       },
+      devOptions: { enabled: false },
     }),
   ],
   server: {
