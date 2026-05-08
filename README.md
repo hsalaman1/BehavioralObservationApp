@@ -26,6 +26,7 @@ A web-based behavioral observation application for Board Certified Behavior Anal
 ### Data Management
 
 - **Auto-Save** - Automatic localStorage persistence with timestamp indicator
+- **Offline Mode** - The form remains usable without internet; submissions queue locally and sync automatically when connectivity returns (see [Offline mode](#offline-mode) below)
 - **Export to CSV** - Full data export in CSV format
 - **Export to Word** - Professional formatted .docx document generation
 - **Print Support** - Print-optimized layout
@@ -90,6 +91,47 @@ src/
 4. **Add ABC Data** - Log behavioral incidents with antecedent/behavior/consequence
 5. **Set Recommendations** - Check applicable recommendations and next steps
 6. **End & Export** - Click "End Observation" and export to CSV or Word
+
+## Offline mode
+
+The app works offline once it has been loaded online at least once. Behind the scenes
+it uses a service worker (PWA) to cache the JavaScript, styles, and fonts needed to
+run, and a local sync queue to hold submissions until the network returns.
+
+### How to set up a device for offline use
+
+1. Open the app on the device while connected to the internet.
+2. Wait until you see the green **Offline-ready** pill next to the connectivity dot
+   in the bottom bar. That confirms the service worker has cached everything.
+3. (Optional but recommended) **Add to Home Screen** so the app launches like a
+   native app:
+   - iOS Safari: Share → Add to Home Screen
+   - Android Chrome: Menu → Install app
+4. After that, the app will launch and the form will work even without internet.
+
+### How offline submissions work
+
+- The form is **always usable**, online or offline. Your draft is auto-saved to
+  the device on every change.
+- When you click **Submit** while offline (the button reads **Save & Queue**), the
+  full report is added to a local sync queue and the editor is reset so you can
+  start the next observation.
+- The connectivity dot shows a small badge with the number of pending reports.
+- When the device reconnects, queued reports sync automatically. You can also use
+  the **Sync** button at any time to push queued reports manually.
+- If a sync fails (e.g. the server returns an error), the failed item is shown
+  with **Retry** and **Discard** controls. Other queued items continue to sync.
+
+### Limitations and verification
+
+- **First-ever launch must be online.** Web browsers cannot open a page they have
+  never fetched before. After one online launch the app caches everything and
+  works offline forever after.
+- Viewing previously submitted reports under "My Reports" requires connectivity;
+  only the create-and-save flow works offline.
+- To verify offline behavior in Chrome: open DevTools → Application → Service
+  Workers → tick **Offline**, then hard-reload. The app shell should render and
+  Submit should queue.
 
 ## Mobile/Tablet Optimization
 

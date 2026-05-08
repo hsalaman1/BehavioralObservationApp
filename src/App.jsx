@@ -1,6 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useObservationStorage } from './hooks/useLocalStorage';
 import { useSupabase } from './hooks/useSupabase';
+import { useSyncQueue } from './hooks/useSyncQueue';
+import { useConnectivity } from './hooks/useConnectivity';
+import { usePwaStatus } from './hooks/usePwaStatus';
 
 // Components
 import { ObservationHeader } from './components/Header/ObservationHeader';
@@ -35,11 +38,16 @@ const TABS = [
 function App() {
   const { data, setData, updateField, resetObservation, loadObservation, lastSaved } = useObservationStorage();
   const { submitObservation, submitting, submitError, submitSuccess, submitMode } = useSupabase();
+  const connectivity = useConnectivity();
+  const { canSubmit } = connectivity;
+  const syncQueue = useSyncQueue();
+  const { offlineReady } = usePwaStatus();
   const [activeTab, setActiveTab] = useState('narrative');
   const [isObserving, setIsObserving] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showMyReports, setShowMyReports] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [queueNotice, setQueueNotice] = useState(null);
 
   useEffect(() => {
     setIsObserving(!!data.header.startTime && !data.header.endTime);
@@ -128,12 +136,28 @@ function App() {
   }, [resetObservation]);
 
   const handleSubmit = useCallback(async () => {
-    const result = await submitObservation(data);
-    if (result && result.mode === 'insert' && result.id) {
-      // Stamp the new Supabase row id so subsequent submits UPDATE instead of INSERT.
-      updateField('remoteId', result.id);
+    if (canSubmit) {
+      const result = await submitObservation(data);
+      if (result && result.mode === 'insert' && result.id) {
+        // First submit succeeded online: free the editor for a new observation.
+        resetObservation();
+        setQueueNotice({ kind: 'submitted', at: Date.now() });
+      } else if (result && result.mode === 'update' && result.id) {
+        // Editing a previously-submitted row succeeded — keep the data on screen.
+        updateField('remoteId', result.id);
+      } else if (!result) {
+        // Server-side failure: queue locally so the user does not lose work.
+        syncQueue.enqueue(data);
+        resetObservation();
+        setQueueNotice({ kind: 'queued-after-fail', at: Date.now() });
+      }
+      return;
     }
-  }, [submitObservation, data, updateField]);
+    // Offline: queue immediately and start a fresh observation.
+    syncQueue.enqueue(data);
+    resetObservation();
+    setQueueNotice({ kind: 'queued-offline', at: Date.now() });
+  }, [canSubmit, submitObservation, data, updateField, resetObservation, syncQueue]);
 
   const handleResumeReport = useCallback((report) => {
     loadObservation(report);
@@ -296,6 +320,11 @@ function App() {
         onMyReportsOpen={() => setShowMyReports(true)}
         open={actionsOpen}
         onClose={() => setActionsOpen(false)}
+        connectivity={connectivity}
+        syncQueue={syncQueue}
+        offlineReady={offlineReady}
+        queueNotice={queueNotice}
+        onDismissQueueNotice={() => setQueueNotice(null)}
       />
     </div>
   );
