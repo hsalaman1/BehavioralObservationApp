@@ -26,7 +26,11 @@ function createWindow() {
   win.once('ready-to-show', () => win.show())
 
   win.webContents.on('will-navigate', (event, url) => {
-    if (!url.startsWith('http://localhost') && !url.startsWith('file://')) {
+    try {
+      const u = new URL(url)
+      const allowed = (u.protocol === 'http:' && u.hostname === 'localhost') || u.protocol === 'file:'
+      if (!allowed) event.preventDefault()
+    } catch {
       event.preventDefault()
     }
   })
@@ -35,13 +39,23 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  const isDev = !app.isPackaged
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const csp = [
+      "default-src 'self'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https://*.supabase.co",
+      `connect-src 'self' https://*.supabase.co wss://*.supabase.co${isDev ? ' ws://localhost:* http://localhost:*' : ''}`,
+      "worker-src 'none'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "frame-ancestors 'none'",
+    ].join('; ')
+
     callback({
       responseHeaders: {
         ...details.responseHeaders,
-        'Content-Security-Policy': [
-          "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; worker-src 'none';"
-        ],
+        'Content-Security-Policy': [csp],
       },
     })
   })
