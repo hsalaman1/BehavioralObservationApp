@@ -3,50 +3,12 @@ import { downloadCSV } from './generateCSV';
 import { downloadDocx } from './generateDocx';
 import { downloadPdf } from './generatePdf';
 import { downloadReportFile } from './generateReportFile';
-import { useConnectivity } from '../../hooks/useConnectivity';
 import { useKeyboardVisible } from '../../hooks/useKeyboardVisible';
 
-function ConnectivityDot({ isOnline, supabaseReachable, checking, showLabelOnMobile = false }) {
-  let color, label;
-  if (!isOnline) {
-    color = 'bg-red-500';
-    label = 'Offline';
-  } else if (checking || supabaseReachable === null) {
-    color = 'bg-yellow-400 animate-pulse';
-    label = 'Checking…';
-  } else if (supabaseReachable) {
-    color = 'bg-green-500';
-    label = 'Connected';
-  } else {
-    color = 'bg-red-500';
-    label = 'Server unreachable';
-  }
-
-  return (
-    <span className="flex items-center gap-1 text-xs text-gray-500 select-none" title={label}>
-      <span className={`inline-block w-2 h-2 rounded-full ${color}`} />
-      <span className={showLabelOnMobile ? 'inline' : 'hidden md:inline'}>{label}</span>
-    </span>
-  );
-}
-
-function StatusMessages({ isOnline, supabaseReachable, checking, submitError, submitSuccess, submitMode }) {
-  if (isOnline && supabaseReachable !== false && !submitError && !submitSuccess) return null;
+function StatusMessages({ submitSuccess, submitMode }) {
+  if (!submitSuccess) return null;
   return (
     <div className="space-y-1">
-      {!isOnline && (
-        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1">
-          You are offline. Connect to the internet to submit reports.
-        </p>
-      )}
-      {isOnline && supabaseReachable === false && !checking && (
-        <p className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded px-2 py-1">
-          Cannot reach the server. Submissions are disabled until connectivity is restored.
-        </p>
-      )}
-      {submitError && (
-        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1">{submitError}</p>
-      )}
       {submitSuccess && (
         <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2 py-1">
           {submitMode === 'update' ? 'Report updated successfully!' : 'Report submitted successfully!'}
@@ -59,7 +21,7 @@ function StatusMessages({ isOnline, supabaseReachable, checking, submitError, su
 const PRIMARY = 'min-h-[44px] py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2';
 const ICON = 'min-h-[44px] min-w-[44px] rounded-lg text-sm font-medium transition-colors flex items-center justify-center';
 
-function ActionButtons({ data, onClear, onSubmit, submitting, canSubmit, onAdminOpen, onMyReportsOpen, onActionTaken, variant }) {
+function ActionButtons({ data, onClear, onSubmit, submitting, onAdminOpen, onMyReportsOpen, onActionTaken, variant }) {
   const wrap = (fn) => () => {
     fn();
     onActionTaken?.();
@@ -78,8 +40,8 @@ function ActionButtons({ data, onClear, onSubmit, submitting, canSubmit, onAdmin
       <div className={primaryGridClass}>
         <button
           onClick={onSubmit}
-          disabled={submitting || !canSubmit}
-          title={!canSubmit ? 'No connection to server' : 'Submit report to cloud'}
+          disabled={submitting}
+          title="Submit report to cloud"
           className={`${PRIMARY} bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed md:flex-1 md:order-4`}
         >
           {submitting ? (
@@ -178,14 +140,12 @@ export function ExportButtons({
   onSubmit,
   submitting,
   submitSuccess,
-  submitError,
   submitMode,
   onAdminOpen,
   onMyReportsOpen,
   open = false,
   onClose,
 }) {
-  const { isOnline, supabaseReachable, checking, canSubmit } = useConnectivity();
   const keyboardVisible = useKeyboardVisible();
 
   // Auto-close the mobile sheet after a successful submission.
@@ -202,16 +162,9 @@ export function ExportButtons({
         keyboardVisible ? 'md:block' : ''
       }`}
     >
-      {(submitError || submitSuccess || !isOnline || supabaseReachable === false) && (
+      {submitSuccess && (
         <div className="max-w-4xl md:max-w-5xl mx-auto px-4 pt-2">
-          <StatusMessages
-            isOnline={isOnline}
-            supabaseReachable={supabaseReachable}
-            checking={checking}
-            submitError={submitError}
-            submitSuccess={submitSuccess}
-            submitMode={submitMode}
-          />
+          <StatusMessages submitSuccess={submitSuccess} submitMode={submitMode} />
         </div>
       )}
 
@@ -221,14 +174,10 @@ export function ExportButtons({
           onClear={onClear}
           onSubmit={onSubmit}
           submitting={submitting}
-          canSubmit={canSubmit}
           onAdminOpen={onAdminOpen}
           onMyReportsOpen={onMyReportsOpen}
           variant="bar"
         />
-        <div className="md:order-10 md:ml-auto">
-          <ConnectivityDot isOnline={isOnline} supabaseReachable={supabaseReachable} checking={checking} />
-        </div>
       </div>
     </div>
   );
@@ -247,12 +196,6 @@ export function ExportButtons({
             <span className="text-sm font-semibold text-gray-700 ml-2">Actions</span>
           </div>
           <div className="flex items-center gap-3">
-            <ConnectivityDot
-              isOnline={isOnline}
-              supabaseReachable={supabaseReachable}
-              checking={checking}
-              showLabelOnMobile
-            />
             <button
               type="button"
               onClick={onClose}
@@ -266,16 +209,11 @@ export function ExportButtons({
           </div>
         </div>
 
-        <div className="px-4 pb-3">
-          <StatusMessages
-            isOnline={isOnline}
-            supabaseReachable={supabaseReachable}
-            checking={checking}
-            submitError={submitError}
-            submitSuccess={submitSuccess}
-            submitMode={submitMode}
-          />
-        </div>
+        {submitSuccess && (
+          <div className="px-4 pb-3">
+            <StatusMessages submitSuccess={submitSuccess} submitMode={submitMode} />
+          </div>
+        )}
 
         <div className="px-4 pb-4">
           <ActionButtons
@@ -283,7 +221,6 @@ export function ExportButtons({
             onClear={onClear}
             onSubmit={onSubmit}
             submitting={submitting}
-            canSubmit={canSubmit}
             onAdminOpen={onAdminOpen}
             onMyReportsOpen={onMyReportsOpen}
             onActionTaken={onClose}
