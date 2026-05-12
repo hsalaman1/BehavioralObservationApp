@@ -1,0 +1,23 @@
+appId: com.abaspot.behavioral-observation
+productName: Behavioral Observation
+copyright: Copyright © 2026 ABA Spot
+
+directories:
+  output: dist-electron
+
+files:
+  - dist/**
+  - electron/**
+  - package.json
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
