@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+const isElectron =
+  typeof window !== 'undefined' &&
+  typeof window.process === 'object' &&
+  window.process.type === 'renderer';
+
 const SpeechRecognition =
   typeof window !== 'undefined'
     ? window.SpeechRecognition || window.webkitSpeechRecognition
     : null;
 
-export const isSpeechRecognitionSupported = !!SpeechRecognition;
+export const isSpeechRecognitionSupported = !isElectron && !!SpeechRecognition;
 
 export function useSpeechRecognition({ onFinal } = {}) {
   const [listening, setListening] = useState(false);
