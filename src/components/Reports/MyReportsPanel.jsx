@@ -61,11 +61,6 @@ export function MyReportsPanel({ observerName, onResume, onClose }) {
           </button>
         </div>
 
-        {!isConfigured && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800 mb-4">
-            Cloud sync is not configured. Prior reports can't be loaded on this device.
-          </div>
-        )}
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
           <label className="block text-xs text-gray-600 mb-1">Observer name</label>

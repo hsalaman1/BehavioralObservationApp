@@ -37,19 +37,6 @@ export function StudentPicker({ value, onSelect }) {
         {students.length > 0 && <option value="__manage__">⚙ Manage students…</option>}
       </select>
 
-      {error && (
-        <div className="flex items-start gap-2 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1">
-          <span className="flex-1">{error}</span>
-          <button
-            type="button"
-            onClick={() => refresh()}
-            disabled={loading}
-            className="underline hover:text-amber-900 disabled:opacity-60 shrink-0"
-          >
-            {loading ? 'Syncing…' : 'Retry sync'}
-          </button>
-        </div>
-      )}
 
       {showAddModal && (
         <AddStudentModal
