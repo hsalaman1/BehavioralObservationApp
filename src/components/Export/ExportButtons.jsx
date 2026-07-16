@@ -18,8 +18,8 @@ function StatusMessages({ submitSuccess, submitMode }) {
   );
 }
 
-const PRIMARY = 'min-h-[44px] py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2';
-const ICON = 'min-h-[44px] min-w-[44px] rounded-lg text-sm font-medium transition-colors flex items-center justify-center';
+const PRIMARY = 'action-button min-h-[44px] py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2';
+const ICON = 'action-button min-h-[44px] min-w-[44px] rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2';
 
 function ActionButtons({ data, onClear, onSubmit, submitting, onAdminOpen, onMyReportsOpen, onActionTaken, variant }) {
   const wrap = (fn) => () => {
@@ -42,7 +42,7 @@ function ActionButtons({ data, onClear, onSubmit, submitting, onAdminOpen, onMyR
           onClick={onSubmit}
           disabled={submitting}
           title="Submit report to cloud"
-          className={`${PRIMARY} bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed md:flex-1 md:order-4`}
+          className={`${PRIMARY} action-primary text-white disabled:opacity-50 disabled:cursor-not-allowed md:flex-1 md:order-4`}
         >
           {submitting ? (
             <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,7 +58,7 @@ function ActionButtons({ data, onClear, onSubmit, submitting, onAdminOpen, onMyR
 
         <button
           onClick={wrap(() => downloadDocx(data))}
-          className={`${PRIMARY} bg-blue-600 text-white hover:bg-blue-700 md:flex-1 md:order-2`}
+          className={`${PRIMARY} action-secondary md:flex-1 md:order-2`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -68,7 +68,7 @@ function ActionButtons({ data, onClear, onSubmit, submitting, onAdminOpen, onMyR
 
         <button
           onClick={wrap(() => downloadPdf(data))}
-          className={`${PRIMARY} bg-red-600 text-white hover:bg-red-700 md:flex-1 md:order-3`}
+          className={`${PRIMARY} action-secondary md:flex-1 md:order-3`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -78,7 +78,7 @@ function ActionButtons({ data, onClear, onSubmit, submitting, onAdminOpen, onMyR
 
         <button
           onClick={wrap(() => downloadCSV(data))}
-          className={`${PRIMARY} bg-green-600 text-white hover:bg-green-700 md:flex-1 md:order-1`}
+          className={`${PRIMARY} action-secondary md:flex-1 md:order-1`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -91,53 +91,57 @@ function ActionButtons({ data, onClear, onSubmit, submitting, onAdminOpen, onMyR
         <button
           onClick={wrap(() => window.print())}
           title="Print"
-          className={`${ICON} bg-gray-200 text-gray-700 hover:bg-gray-300 flex-1 md:flex-none md:px-4 md:order-5`}
+          className={`${ICON} action-secondary flex-1 md:flex-none md:px-4 md:order-5`}
         >
-          🖨️
+          <span aria-hidden="true">🖨️</span>{variant === 'sheet' && <span>Print</span>}
         </button>
         <button
           onClick={onClear}
           title="Clear all data"
-          className={`${ICON} bg-red-100 text-red-700 hover:bg-red-200 flex-1 md:flex-none md:px-4 md:order-6`}
+          className={`${ICON} action-danger flex-1 md:flex-none md:px-4 md:order-6`}
         >
-          🗑️
+          <span aria-hidden="true">🗑️</span>{variant === 'sheet' && <span>Clear</span>}
         </button>
         <button
           onClick={wrap(() => downloadReportFile(data))}
           title="Save report as file (for offline / email to admin)"
-          className={`${ICON} bg-indigo-100 text-indigo-700 hover:bg-indigo-200 flex-1 md:flex-none md:px-4 md:order-7`}
+          className={`${ICON} action-secondary flex-1 md:flex-none md:px-4 md:order-7`}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
           </svg>
+          {variant === 'sheet' && <span>Save File</span>}
         </button>
         <button
           onClick={wrap(onMyReportsOpen)}
           title="My prior reports"
-          className={`${ICON} bg-purple-100 text-purple-700 hover:bg-purple-200 flex-1 md:flex-none md:px-3 md:order-8`}
+          className={`${ICON} action-secondary flex-1 md:flex-none md:px-3 md:order-8`}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
           </svg>
+          {variant === 'sheet' && <span>My Reports</span>}
         </button>
         <button
           onClick={wrap(onAdminOpen)}
           title="Admin"
-          className={`${ICON} bg-gray-100 text-gray-500 hover:text-gray-700 hover:bg-gray-200 flex-1 md:flex-none md:px-3 md:order-9`}
+          className={`${ICON} action-secondary flex-1 md:flex-none md:px-3 md:order-9`}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
+          {variant === 'sheet' && <span>Admin</span>}
         </button>
         {window.electronAPI?.newWindow && (
           <button
             onClick={wrap(() => window.electronAPI.newWindow())}
             title="New Window — start a second observation"
-            className={`${ICON} bg-teal-100 text-teal-700 hover:bg-teal-200 flex-1 md:flex-none md:px-3 md:order-10`}
+            className={`${ICON} action-secondary flex-1 md:flex-none md:px-3 md:order-10`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
             </svg>
+            {variant === 'sheet' && <span>New Window</span>}
           </button>
         )}
       </div>
@@ -169,7 +173,7 @@ export function ExportButtons({
 
   const desktopBar = (
     <div
-      className={`hidden md:block fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg no-print pb-[env(safe-area-inset-bottom)] ${
+      className={`desktop-action-bar hidden md:block fixed bottom-0 left-0 right-0 no-print pb-[env(safe-area-inset-bottom)] ${
         keyboardVisible ? 'md:block' : ''
       }`}
     >
@@ -200,7 +204,7 @@ export function ExportButtons({
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+      <div className="mobile-action-sheet absolute bottom-0 left-0 right-0 rounded-t-3xl shadow-xl pb-[calc(env(safe-area-inset-bottom)+1rem)]">
         <div className="flex items-center justify-between px-4 pt-3 pb-2">
           <div className="flex items-center gap-2">
             <span className="block w-10 h-1 rounded-full bg-gray-300" aria-hidden="true" />

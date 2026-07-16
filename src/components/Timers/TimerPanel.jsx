@@ -17,28 +17,19 @@ export function TimerPanel({ durationData, onDurationChange }) {
     <div className="grid grid-cols-3 gap-2">
       <DurationTimer
         name="Crisis"
-        colorClass="text-red-600"
-        bgClass="bg-red-50"
-        borderClass="border-red-400"
-        pulseClass="timer-active-red"
+        variant="crisis"
         data={durationData.crisis}
         {...makeHandlers('crisis')}
       />
       <DurationTimer
         name="On Task"
-        colorClass="text-green-600"
-        bgClass="bg-green-50"
-        borderClass="border-green-400"
-        pulseClass="timer-active-green"
+        variant="ontask"
         data={durationData.onTask}
         {...makeHandlers('onTask')}
       />
       <DurationTimer
         name="Off Task"
-        colorClass="text-blue-600"
-        bgClass="bg-blue-50"
-        borderClass="border-blue-400"
-        pulseClass="timer-active-blue"
+        variant="offtask"
         data={durationData.offTask}
         {...makeHandlers('offTask')}
       />

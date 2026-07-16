@@ -33,8 +33,8 @@ export function NarrativeEntry({ entry, onEdit, onDelete }) {
   };
 
   return (
-    <tr className="border-t hover:bg-gray-50">
-      <td className="px-3 py-2 font-mono text-sm text-gray-600 whitespace-nowrap align-top">
+    <tr className="narrative-row">
+      <td className="narrative-time px-3 py-2 font-mono text-sm whitespace-nowrap align-top">
         {entry.time}
       </td>
       <td className="px-3 py-2 text-sm">
@@ -46,11 +46,12 @@ export function NarrativeEntry({ entry, onEdit, onDelete }) {
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
               onKeyDown={handleKeyPress}
-              className="flex-1 border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="flex-1 border rounded px-2 py-1 text-sm outline-none"
             />
             <button
               onClick={handleSave}
-              className="text-green-600 px-2 hover:bg-green-50 rounded"
+              className="px-2 rounded"
+              style={{ color: 'var(--green)' }}
               title="Save"
             >
               ✓
@@ -72,7 +73,7 @@ export function NarrativeEntry({ entry, onEdit, onDelete }) {
           <div className="flex gap-1">
             <button
               onClick={() => setIsEditing(true)}
-              className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+              className="p-1 text-gray-400 hover:text-[color:var(--obs-orange-text)] hover:bg-[color:var(--obs-soft)] rounded"
               title="Edit"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

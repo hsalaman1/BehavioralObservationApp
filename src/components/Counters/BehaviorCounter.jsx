@@ -1,12 +1,3 @@
-const colorClasses = {
-  blue: 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100',
-  green: 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100',
-  red: 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100',
-  orange: 'bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100',
-  purple: 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100',
-  gray: 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-};
-
 export function BehaviorCounter({ name, value, onChange, color = 'blue', showButtons = false }) {
   const handleClick = () => {
     onChange(value + 1);
@@ -25,7 +16,7 @@ export function BehaviorCounter({ name, value, onChange, color = 'blue', showBut
   if (showButtons) {
     return (
       <div
-        className={`flex flex-col items-center p-2 rounded-lg border-2 ${colorClasses[color]} min-w-[80px]`}
+        className={`behavior-counter ${value > 0 ? 'behavior-counter-hot' : ''} flex flex-col items-center p-2 min-w-[80px]`}
       >
         <span className="text-[10px] font-medium text-center leading-tight mb-1">{name}</span>
         <div className="flex items-center gap-2">
@@ -50,11 +41,11 @@ export function BehaviorCounter({ name, value, onChange, color = 'blue', showBut
   return (
     <button
       onClick={handleClick}
-      className={`flex flex-col items-center p-2 rounded-lg border-2 ${colorClasses[color]}
-        transition-all active:scale-95 min-w-[70px]`}
+      className={`behavior-counter ${value > 0 ? 'behavior-counter-hot' : ''} flex flex-col items-center px-3 py-2.5
+        transition-all active:scale-95 min-w-[78px]`}
     >
       <span className="text-[10px] font-medium text-center leading-tight">{name}</span>
-      <span className="text-2xl font-bold">{value}</span>
+      <span className="text-2xl font-semibold">{value}</span>
     </button>
   );
 }
