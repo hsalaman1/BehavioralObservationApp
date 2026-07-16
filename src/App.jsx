@@ -147,7 +147,7 @@ function App() {
     switch (activeTab) {
       case 'narrative':
         return (
-          <div className="space-y-4">
+          <div className="narrative-stack space-y-4">
             <ObservationNote
               value={data.observationNote}
               onChange={(value) => updateField('observationNote', value)}
@@ -213,10 +213,13 @@ function App() {
       {/* Timer panel: fixed footer on mobile (always reachable), inline on desktop */}
       <div className="timer-dock fixed bottom-0 left-0 right-0 z-30 px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] no-print md:static md:bg-transparent md:border-0 md:shadow-none md:p-0 md:pb-0 md:z-auto">
         <div className="max-w-4xl md:max-w-5xl mx-auto md:px-4 md:py-3">
-          <TimerPanel
-            durationData={data.durationData}
-            onDurationChange={handleDurationChange}
-          />
+          <section className="timer-section md:p-6">
+            <h2 className="editorial-title hidden md:block">Duration Timers</h2>
+            <TimerPanel
+              durationData={data.durationData}
+              onDurationChange={handleDurationChange}
+            />
+          </section>
         </div>
       </div>
 

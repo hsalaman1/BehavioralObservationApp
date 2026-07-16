@@ -7,9 +7,9 @@ export function ObservationNote({ value, onChange }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
-      <div className="flex items-center justify-between border-b pb-2 mb-4">
-        <h2 className="text-lg font-semibold text-gray-800">Observation Note</h2>
+    <div className="observation-card p-4 md:p-6">
+      <div className="flex items-center justify-between border-b border-[color:var(--obs-line)] pb-3 mb-4">
+        <h2 className="editorial-title !border-0 !pb-0 !mb-0">Observation Note</h2>
         <VoiceDictateButton onTranscript={appendTranscript} size="sm" />
       </div>
       <TextArea

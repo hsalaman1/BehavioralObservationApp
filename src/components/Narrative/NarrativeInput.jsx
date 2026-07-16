@@ -33,10 +33,10 @@ export function NarrativeInput({ onAddEntry }) {
   };
 
   return (
-    <div className="flex gap-2 items-center bg-white p-3 rounded-lg border-b">
+    <div className="narrative-input-row flex gap-2 items-center p-3">
       {/* Live Clock Display */}
-      <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg min-w-[110px]">
-        <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="narrative-clock px-3 py-2 min-w-[110px]">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="10" strokeWidth="2" />
           <path strokeWidth="2" d="M12 6v6l4 2" />
         </svg>
@@ -51,7 +51,7 @@ export function NarrativeInput({ onAddEntry }) {
         onChange={(e) => setText(e.target.value)}
         onKeyPress={handleKeyPress}
         placeholder="Type observation, press Enter..."
-        className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+        className="flex-1 px-4 py-2 border rounded-lg outline-none"
         autoComplete="off"
       />
 
@@ -61,9 +61,7 @@ export function NarrativeInput({ onAddEntry }) {
       <button
         onClick={handleSubmit}
         disabled={!text.trim()}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700
-                   disabled:bg-gray-300 disabled:cursor-not-allowed
-                   flex items-center gap-2 transition-colors"
+        className="narrative-add px-4 py-2 flex items-center gap-2"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeWidth="2" d="M12 5v14M5 12h14" />

@@ -26,24 +26,24 @@ export function TransitionCounter({ successes, attempts, onChange }) {
   };
 
   return (
-    <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-2 min-w-[120px]">
-      <div className="text-[10px] font-medium text-center text-indigo-700 mb-1">Transitions</div>
+    <div className="event-card p-3 min-w-[150px]">
+      <div className="event-name">Transitions</div>
       <div className="text-center mb-2">
-        <span className="text-lg font-bold text-indigo-700">
+        <span className="event-score">
           {successes}/{attempts}
         </span>
-        <span className="text-xs text-indigo-600 ml-1">({percentage}%)</span>
+        <span className="event-percent ml-1">({percentage}%)</span>
       </div>
       <div className="flex gap-1">
         <button
           onClick={handleSuccessClick}
-          className="flex-1 py-1 px-2 bg-green-500 text-white text-xs font-medium rounded hover:bg-green-600 active:scale-95"
+          className="event-pass flex-1 py-2 px-2 text-xs font-medium rounded-lg active:scale-95"
         >
           ✓ Success
         </button>
         <button
           onClick={handleFailClick}
-          className="flex-1 py-1 px-2 bg-red-500 text-white text-xs font-medium rounded hover:bg-red-600 active:scale-95"
+          className="event-fail flex-1 py-2 px-2 text-xs font-medium rounded-lg active:scale-95"
         >
           ✗ Fail
         </button>
@@ -52,14 +52,14 @@ export function TransitionCounter({ successes, attempts, onChange }) {
         <button
           onClick={handleDecrementSuccess}
           disabled={successes === 0}
-          className="flex-1 py-1 px-2 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="event-undo flex-1 py-1.5 px-2 text-xs rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Undo ✓
         </button>
         <button
           onClick={handleDecrementAttempt}
           disabled={attempts <= successes}
-          className="flex-1 py-1 px-2 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="event-undo flex-1 py-1.5 px-2 text-xs rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Undo ✗
         </button>

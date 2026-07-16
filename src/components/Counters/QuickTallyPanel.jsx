@@ -91,14 +91,12 @@ export function QuickTallyPanel({
                 successes={requestHelp?.successes || 0}
                 attempts={requestHelp?.attempts || 0}
                 onChange={onRequestHelpChange}
-                bgColor="teal"
               />
               <EventTracker
                 name="Compliance"
                 successes={compliance?.successes || 0}
                 attempts={compliance?.attempts || 0}
                 onChange={onComplianceChange}
-                bgColor="purple"
               />
             </div>
           </div>
