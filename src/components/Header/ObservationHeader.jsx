@@ -51,7 +51,7 @@ export function ObservationHeader({ header, isObserving, isResumed = false, onHe
     : 'Tap to add observer & student info';
 
   return (
-    <div className="bg-white shadow-sm sticky top-0 z-10">
+    <header className="observation-header sticky top-0 z-10">
       {isResumed && (
         <div className="bg-amber-50 border-b border-amber-200 text-amber-900 text-xs px-4 py-1.5 text-center">
           Editing a previously submitted report — saving again will overwrite the original.
@@ -60,7 +60,10 @@ export function ObservationHeader({ header, isObserving, isResumed = false, onHe
       <div className="max-w-4xl md:max-w-5xl mx-auto px-4 py-2 md:py-3">
         {/* Top Row: Title and Start/End */}
         <div className="flex justify-between items-center mb-2 md:mb-3 gap-2">
-          <h1 className="text-sm md:text-xl font-bold text-gray-800 truncate">Classroom Behavioral Observation</h1>
+          <div className="brand-lockup min-w-0">
+            <span className="hidden md:block text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-700">Observation workspace</span>
+            <h1 className="text-base md:text-2xl font-semibold text-gray-900 truncate">Behavioral Observation</h1>
+          </div>
           <div className="flex items-center gap-2 shrink-0">
             {isObserving && (
               <span className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
@@ -99,7 +102,7 @@ export function ObservationHeader({ header, isObserving, isResumed = false, onHe
                 type="button"
                 onClick={onMenuOpen}
                 aria-label="Open actions menu"
-                className="md:hidden bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="menu-button md:hidden rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -114,7 +117,7 @@ export function ObservationHeader({ header, isObserving, isResumed = false, onHe
           type="button"
           onClick={() => setDetailsOpen((v) => !v)}
           aria-expanded={detailsOpen}
-          className="md:hidden w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded border border-gray-200 bg-gray-50 text-xs text-gray-700"
+          className="mobile-summary md:hidden w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs text-gray-700"
         >
           <span className="truncate text-left">{summaryLabel}</span>
           <svg
@@ -179,6 +182,6 @@ export function ObservationHeader({ header, isObserving, isResumed = false, onHe
           )}
         </div>
       </div>
-    </div>
+    </header>
   );
 }

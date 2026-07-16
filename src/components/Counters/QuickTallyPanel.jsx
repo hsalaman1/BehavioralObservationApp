@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BehaviorCounter } from './BehaviorCounter';
 import { TransitionCounter } from './TransitionCounter';
 import { EventTracker } from './EventTracker';
@@ -13,7 +13,26 @@ export function QuickTallyPanel({
   onRequestHelpChange,
   onComplianceChange
 }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(() => {
+    try {
+      return window.sessionStorage.getItem('quickTallyExpanded') !== 'false';
+    } catch {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.sessionStorage.setItem('quickTallyExpanded', String(isExpanded));
+    } catch {
+      // Session storage can be unavailable in privacy-restricted browsers.
+    }
+  }, [isExpanded]);
+
+  const totalTallies = useMemo(
+    () => Object.values(counters || {}).reduce((sum, value) => sum + (Number(value) || 0), 0),
+    [counters]
+  );
 
   const counterConfig = [
     { key: 'taskCompletion', name: 'Task', color: 'green' },
@@ -28,17 +47,24 @@ export function QuickTallyPanel({
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+    <section className="quick-tally-card overflow-hidden">
       <button
+        type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex justify-between items-center px-4 py-2 font-medium text-gray-700 hover:bg-gray-50"
+        aria-expanded={isExpanded}
+        className="quick-tally-heading w-full flex justify-between items-center px-4 py-3 text-left"
       >
-        <span>Quick Tally (tap to count)</span>
-        <span className="text-gray-400">{isExpanded ? '▲' : '▼'}</span>
+        <span>
+          <span className="block font-semibold text-gray-800">Quick Tally</span>
+          <span className="block text-xs text-gray-500 mt-0.5">
+            {totalTallies} {totalTallies === 1 ? 'tally' : 'tallies'} · 9 behaviors
+          </span>
+        </span>
+        <span className={`quick-tally-chevron ${isExpanded ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span>
       </button>
 
       {isExpanded && (
-        <div className="p-3 border-t">
+        <div className="p-3 md:p-4 border-t border-stone-200">
           <div className="flex flex-wrap gap-2 justify-center">
             {counterConfig.map(({ key, name, color }) => (
               <BehaviorCounter
@@ -52,8 +78,8 @@ export function QuickTallyPanel({
           </div>
 
           {/* Event Recording Section */}
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            <div className="text-xs text-gray-500 text-center mb-2">Event Recording</div>
+          <div className="mt-4 pt-4 border-t border-stone-200">
+            <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 text-center mb-3">Event Recording</div>
             <div className="flex flex-wrap gap-2 justify-center">
               <TransitionCounter
                 successes={transitions.successes}
@@ -78,6 +104,6 @@ export function QuickTallyPanel({
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }

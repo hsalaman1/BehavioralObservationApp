@@ -2,9 +2,185 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --obs-ink: #28231f;
+  --obs-muted: #716a63;
+  --obs-cream: #f7f2e9;
+  --obs-paper: #fffdf9;
+  --obs-line: #e8ded1;
+  --obs-orange: #c85f24;
+  --obs-orange-dark: #a94718;
+}
+
 * {
   -webkit-tap-highlight-color: transparent;
 }
+
+body {
+  color: var(--obs-ink);
+  background: var(--obs-cream);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.observation-app {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(220, 132, 76, 0.09), transparent 24rem),
+    var(--obs-cream);
+}
+
+.observation-header {
+  background: rgba(255, 253, 249, 0.96);
+  border-bottom: 1px solid var(--obs-line);
+  box-shadow: 0 8px 28px rgba(70, 49, 32, 0.06);
+  backdrop-filter: blur(16px);
+}
+
+.brand-lockup h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: -0.025em;
+}
+
+.menu-button,
+.mobile-summary {
+  color: var(--obs-ink);
+  background: #f3ece3;
+  border: 1px solid var(--obs-line);
+}
+
+.menu-button:hover,
+.mobile-summary:hover {
+  background: #eee3d6;
+}
+
+.timer-dock {
+  background: rgba(255, 253, 249, 0.98);
+  border-top: 1px solid var(--obs-line);
+  box-shadow: 0 -10px 28px rgba(70, 49, 32, 0.08);
+}
+
+.quick-tally-card,
+.observation-tabs,
+.observation-content > * {
+  background: var(--obs-paper);
+  border: 1px solid var(--obs-line);
+  box-shadow: 0 10px 30px rgba(70, 49, 32, 0.06);
+}
+
+.quick-tally-card,
+.observation-tabs,
+.observation-content > * {
+  border-radius: 16px;
+}
+
+.quick-tally-heading {
+  background: var(--obs-paper);
+  transition: background 160ms ease;
+}
+
+.quick-tally-heading:hover {
+  background: #faf5ee;
+}
+
+.quick-tally-chevron {
+  color: var(--obs-orange);
+  font-size: 24px;
+  line-height: 1;
+  transition: transform 180ms ease;
+}
+
+.observation-tabs {
+  padding: 4px;
+  scrollbar-width: none;
+}
+
+.observation-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.observation-tab-active {
+  color: #fff;
+  background: var(--obs-orange);
+  border-radius: 10px;
+  box-shadow: 0 5px 12px rgba(200, 95, 36, 0.22);
+}
+
+.observation-tab-idle {
+  color: var(--obs-muted);
+  border-radius: 10px;
+}
+
+.observation-tab-idle:hover {
+  color: var(--obs-ink);
+  background: #f4ede4;
+}
+
+.observation-app input:not([type="checkbox"]):not([type="radio"]),
+.observation-app textarea,
+.observation-app select {
+  border-color: var(--obs-line);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.observation-app input:focus,
+.observation-app textarea:focus,
+.observation-app select:focus {
+  border-color: var(--obs-orange) !important;
+  box-shadow: 0 0 0 3px rgba(200, 95, 36, 0.13) !important;
+  outline: none;
+}
+
+.action-button {
+  box-shadow: 0 3px 10px rgba(70, 49, 32, 0.08);
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 16px rgba(70, 49, 32, 0.12);
+}
+
+.action-primary {
+  background: var(--obs-orange);
+}
+
+.action-primary:hover {
+  background: var(--obs-orange-dark);
+}
+
+.action-secondary {
+  color: var(--obs-ink);
+  background: #fff;
+  border: 1px solid var(--obs-line);
+}
+
+.action-secondary:hover {
+  background: #f6efe7;
+}
+
+.action-danger {
+  color: #a53b31;
+  background: #fff7f5;
+  border: 1px solid #efd3cf;
+}
+
+.action-danger:hover {
+  background: #fce9e6;
+}
+
+.desktop-action-bar,
+.mobile-action-sheet {
+  background: rgba(255, 253, 249, 0.98);
+  border-color: var(--obs-line);
+  backdrop-filter: blur(18px);
+}
+
+@media (min-width: 768px) {
+  .timer-dock {
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
 
 /* Prevent iOS zoom on inputs */
 input, textarea, button, select {
@@ -96,6 +272,24 @@ input, textarea, button, select {
 
 .timer-active-blue {
   animation: pulse-ring-blue 1.5s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timer-active-red,
+  .timer-active-green,
+  .timer-active-orange,
+  .timer-active-blue {
+    animation: none;
+  }
+
+  .action-button,
+  .quick-tally-chevron {
+    transition: none;
+  }
+
+  .action-button:hover {
+    transform: none;
+  }
 }
 
 /* Print styles */
